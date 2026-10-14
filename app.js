@@ -6,10 +6,10 @@ const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=index
 let st=JSON.parse(localStorage.getItem('sk-state')||'null')||{games:{},cur:null,theme:null,flip:false,corners:null,hideChara:false};
 const save=()=>localStorage.setItem('sk-state',JSON.stringify(st));
 let game,ps,view=0,sel=null,legalCache=null,changed=[],pendingPhoto=null;const refImgs={};
-function newGame(h='平手',black='',white='',moves=[]){const id='g'+Date.now();const d=new Date();
- st.games[id]={id,handicap:h,black,white,moves,photos:[],created:Date.now(),name:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${h}`};
+function newGame(h='平手',black='',white='',moves=[],start=null){const id='g'+Date.now();const d=new Date();
+ st.games[id]={id,handicap:h,start,black,white,moves,photos:[],created:Date.now(),name:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${h}`};
  st.cur=id;save();load();}
-function load(){game=st.games[st.cur];if(!game)return newGame();ps=S.positions(game.handicap,game.moves);view=game.moves.length;sel=null;changed=[];legalCache=null;render();}
+function load(){game=st.games[st.cur];if(!game)return newGame();ps=S.positions(game.handicap,game.moves,game.start);view=game.moves.length;sel=null;changed=[];legalCache=null;render();}
 const pos=()=>ps[view];
 function legalNow(){if(!legalCache||legalCache.v!==view||legalCache.n!==game.moves.length)legalCache={v:view,n:game.moves.length,l:S.legal(pos())};return legalCache.l;}
 const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2200)};
@@ -32,7 +32,7 @@ function render(){const p=pos(),fl=st.flip,last=view?game.moves[view-1]:null,lg=
  const lgAll=legalNow();
  $('#status').textContent=view<game.moves.length?`${view}手目の局面を表示中（ここから指すと以降の手は消えます）`:lgAll.length===0?`${sideName(p.turn)}の負け（詰み）`:`${sideName(p.turn)}の番${S.inCheck(p,p.turn)?'・王手！':''}`;
  $('#nPly').textContent=`${view}/${game.moves.length}手`;
- $('#moves').innerHTML=`<div class="mv${view===0?' on':''}" data-i="0"><span class="n">0</span><span class="t">開始局面（${game.handicap}）</span>${game.photos.includes(0)?'<img data-ph="0">':''}</div>`+
+ $('#moves').innerHTML=`<div class="mv${view===0?' on':''}" data-i="0"><span class="n">0</span><span class="t">開始局面（${game.start?'指定局面':game.handicap}）</span>${game.photos.includes(0)?'<img data-ph="0">':''}</div>`+
   game.moves.map((m,i)=>`<div class="mv${view===i+1?' on':''}" data-i="${i+1}"><span class="n">${i+1}</span><span class="t">${notationAt(i)}</span>${game.photos.includes(i+1)?`<img data-ph="${i+1}">`:''}</div>`).join('');
  document.querySelectorAll('#moves img[data-ph]').forEach(im=>idb.get(game.id+':'+im.dataset.ph).then(u=>{if(u)im.src=u}));
  const on=$('#moves .on'),mb=$('#moves');if(on){const t=on.offsetTop-mb.offsetTop;if(t<mb.scrollTop||t+on.offsetHeight>mb.scrollTop+mb.clientHeight)mb.scrollTop=t-mb.clientHeight+on.offsetHeight+4;}
@@ -52,7 +52,7 @@ function choosePromotion(ms,photo){if(ms.length===1)return commit(ms[0],photo);
 async function commit(m,photo){if(!truncateOk()){render();return;}
  const removed=game.moves.length>view;
  if(removed){for(const k of game.photos.filter(k=>k>view))idb.del(game.id+':'+k);game.photos=game.photos.filter(k=>k<=view);for(const k in refImgs)if(+k>view)delete refImgs[k];}
- game.moves=game.moves.slice(0,view);game.moves.push(m);ps=S.positions(game.handicap,game.moves);view=game.moves.length;sel=null;
+ game.moves=game.moves.slice(0,view);game.moves.push(m);ps=S.positions(game.handicap,game.moves,game.start);view=game.moves.length;sel=null;
  photo=photo||pendingPhoto;pendingPhoto=null;
  if(photo){await storePhoto(view,photo);}
  save();changed=[];render();
@@ -68,7 +68,7 @@ $('#nFirst').onclick=()=>go(0);$('#nPrev').onclick=()=>go(view-1);$('#nNext').on
 $('#moves').addEventListener('click',e=>{const im=e.target.closest('img');if(im&&im.src){openSheet(`${im.dataset.ph}手目の写真`,`<img src="${im.src}" style="width:100%;border-radius:10px">`);return;}const r=e.target.closest('.mv');if(r)go(+r.dataset.i);});
 $('#bUndo').onclick=()=>{if(!game.moves.length)return;if(view<game.moves.length){go(view-1);return;}
  const n=game.moves.length;game.moves.pop();if(game.photos.includes(n)){idb.del(game.id+':'+n);game.photos=game.photos.filter(k=>k!==n);delete refImgs[n];}
- ps=S.positions(game.handicap,game.moves);view=game.moves.length;save();sel=null;changed=[];render();toast('1手戻しました');};
+ ps=S.positions(game.handicap,game.moves,game.start);view=game.moves.length;save();sel=null;changed=[];render();toast('1手戻しました');};
 $('#bFlip').onclick=()=>{st.flip=!st.flip;save();render();};
 function applyTheme(){const t=st.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;$('#bTheme').textContent=t==='dark'?'☀️':'🌙';}
 $('#bTheme').onclick=()=>{st.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';save();applyTheme();};
@@ -96,7 +96,7 @@ $('#bKif').onclick=()=>{const k=S.toKIF(game);
  <div class="row"><button id="kLoad">貼り付けた棋譜を開く</button><button id="kFile">ファイルから</button></div><input type="file" id="kFileIn" accept=".kif,.kifu,.txt" hidden>`);
  $('#kCopy').onclick=async()=>{try{await navigator.clipboard.writeText(k)}catch(e){$('#kifT').select();document.execCommand('copy')}toast('棋譜をコピーしました')};
  $('#kDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([k],{type:'text/plain'}));a.download=`kifu_${game.name.replace(/[\/: ]/g,'_')}.kifu`;a.click();};
- const imp=t=>{try{const g=S.parseKIF(t);closeSheet();newGame(g.handicap,g.black,g.white,g.moves);game.name='読込 '+game.name;save();render();toast(`${g.moves.length}手を読み込みました`)}catch(e){alert('読み込めませんでした: '+e.message)}};
+ const imp=t=>{try{const g=S.parseKIF(t);closeSheet();newGame(g.handicap,g.black,g.white,g.moves,g.start);game.name='読込 '+game.name;save();render();toast(`${g.moves.length}手を読み込みました`)}catch(e){alert('読み込めませんでした: '+e.message)}};
  $('#kLoad').onclick=()=>imp($('#kifIn').value);$('#kFile').onclick=()=>$('#kFileIn').click();
  $('#kFileIn').onchange=async e=>{const f=e.target.files[0];if(!f)return;const buf=await f.arrayBuffer();let t=new TextDecoder('utf-8').decode(buf);if(t.includes('\uFFFD'))t=new TextDecoder('shift_jis').decode(buf);imp(t);};};
 // ---------- カメラ ----------
@@ -129,7 +129,7 @@ function toAdjust(cv,fromGuide,onOk){shot=cv;const w=cv.width,h=cv.height;
   let best=-1,bd=1e9;corners.forEach((q,i)=>{const d=Math.hypot(q[0]-p[0],q[1]-p[1]);if(d<bd){bd=d;best=i}});if(bd<w/6){drag=best;c.setPointerCapture(e.pointerId);}};
  c.onpointermove=e=>{if(drag<0)return;corners[drag]=pt(e);draw();};c.onpointerup=()=>{drag=-1};
  $('#aTap').onclick=()=>{tapMode=0;draw();toast('左上の角をタップ');};$('#aGuide').onclick=()=>{corners=guideCorners(w,h);draw();};
- $('#aOk').onclick=()=>{st.corners=corners.map(([x,y])=>[x/w,y/h]);save();if(onOk)return onOk();
+ $('#aOk').onclick=()=>{st.corners=corners.map(([x,y])=>[x/w,y/h]);save();if(onOk)return onOk();if(window.camHook){const hk=camHook;camHook=null;return hk(V.rectify(shot.getContext('2d').getImageData(0,0,w,h),corners,360));}
   const img=V.rectify(shot.getContext('2d').getImageData(0,0,w,h),corners,RS);analyze(img);};}
 async function analyze(img){const ref=await getRef(view);
  if(!ref){await storePhoto(view,img);closeSheet();render();say(`${view}手目の局面を基準として保存したよ。指したらまた撮ってね`,true);return;}

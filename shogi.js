@@ -84,7 +84,7 @@ function kifMove(m,prev){const same=prev&&prev.tr===m.tr&&prev.tc===m.tc;
  return (same?'同　':sq(m.tr,m.tc))+pieceName(m)+(m.drop?'打':(m.promote?'成':m.canP?'不成':'')+'('+(9-m.fc)+(m.fr+1)+')');}
 function toKIF(game){const d=new Date(game.created||Date.now()),z=n=>String(n).padStart(2,'0');
  let s='# ---- 将棋カメラ棋譜 ----\n開始日時：'+d.getFullYear()+'/'+z(d.getMonth()+1)+'/'+z(d.getDate())+' '+z(d.getHours())+':'+z(d.getMinutes())+'\n';
- s+='手合割：'+(game.handicap||'平手')+'\n';
+ s+=game.start?toBOD(game.start):'手合割：'+(game.handicap||'平手')+'\n';
  const ho=game.handicap&&game.handicap!=='平手';
  s+=(ho?'下手：':'先手：')+(game.black||'')+'\n'+(ho?'上手：':'後手：')+(game.white||'')+'\n';
  s+='手数----指手---------消費時間--\n';
@@ -94,7 +94,7 @@ const NAMES_ALL=[['成香','L',1],['成桂','N',1],['成銀','S',1],['歩','P',0
 function parseKIF(text){const lines=text.replace(/\r/g,'').split('\n');let h='平手',black='',white='';
  for(const l of lines){let m;if(m=l.match(/^手合割[：:](.+)/))h=m[1].trim();if(m=l.match(/^(先手|下手)[：:](.*)/))black=m[2].trim();if(m=l.match(/^(後手|上手)[：:](.*)/))white=m[2].trim();}
  if(!HANDICAPS.includes(h))h='平手';
- let p=initial(h);const moves=[];
+ const start=parseBOD(lines);let p=start?clone(start):initial(h);const moves=[];
  for(const l of lines){const mm=l.match(/^\s*(\d+)\s+(.+)$/);if(!mm||l.trim().startsWith('#'))continue;mm[2]=mm[2].replace(/\s+\(\s*[\d:\/ ]+\)\s*\+?$/,'').trim();let t=mm[2].replace(/^[▲△☗☖]/,'');
   if(/^(投了|中断|詰み|千日手|持将棋|切れ負け|反則|入玉)/.test(t))break;
   let tr,tc;const prev=moves[moves.length-1];
@@ -105,7 +105,20 @@ function parseKIF(text){const lines=text.replace(/\r/g,'').split('\n');let h='�
   const cands=legal(p).filter(x=>x.tr===tr&&x.tc===tc&&x.k===nm[1]&&!!x.drop===drop&&(drop||(!!x.wasP===!!nm[2]&&!!x.promote===prom))&&(!from||x.fc===9-+from[1]&&x.fr===+from[2]-1));
   if(!cands.length)throw new Error(mm[1]+'手目が指せない手です: '+mm[2]);
   moves.push(cands[0]);p=apply(p,cands[0]);}
- return {handicap:h,black,white,moves};}
-function positions(handicap,moves){const ps=[initial(handicap)];for(const m of moves)ps.push(apply(ps[ps.length-1],m));return ps;}
-G.Shogi={NAME,PNAME,CH1,KAN,ZEN,HAND_ORDER,HANDICAPS,initial,clone,apply,legal,inCheck,notation,kifMove,toKIF,parseKIF,positions,sq,mustPromote};
+ return {handicap:start?'平手':h,start,black,white,moves};}
+function positions(handicap,moves,start){const ps=[start?clone(start):initial(handicap)];for(const m of moves)ps.push(apply(ps[ps.length-1],m));return ps;}
+const BODCH={P:'歩',L:'香',N:'桂',S:'銀',G:'金',B:'角',R:'飛',K:'玉'},BODP={P:'と',L:'杏',N:'圭',S:'全',B:'馬',R:'龍'};
+const NUMK=['','','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八'];
+function handStr(h){const a=HAND_ORDER.filter(k=>h[k]).map(k=>NAME[k]+(h[k]>1?NUMK[h[k]]:''));return a.length?a.join('　'):'なし';}
+function toBOD(p){let s='後手の持駒：'+handStr(p.h[1])+'\n  ９ ８ ７ ６ ５ ４ ３ ２ １\n+---------------------------+\n';
+ for(let r=0;r<9;r++){s+='|';for(let c=0;c<9;c++){const x=p.b[r][c];s+=x?(x.o?'v':' ')+(x.p?BODP[x.k]:BODCH[x.k]):' ・';}s+='|'+KAN[r+1]+'\n';}
+ return s+'+---------------------------+\n先手の持駒：'+handStr(p.h[0])+'\n'+(p.turn?'後手番\n':'');}
+function parseBOD(lines){const rows=lines.filter(l=>/^\|.*\|[一二三四五六七八九]/.test(l));if(rows.length!==9)return null;
+ const b=Array.from({length:9},()=>Array(9).fill(null));const rev={};for(const k in BODCH)rev[BODCH[k]]=[k,false];for(const k in BODP)rev[BODP[k]]=[k,true];rev['王']=['K',false];rev['竜']=['R',true];
+ rows.forEach((l,r)=>{const t=l.slice(1,l.lastIndexOf('|'));for(let c=0;c<9;c++){const cell=t.substr(c*2,2);const ch=cell[1];if(rev[ch])b[r][c]={k:rev[ch][0],o:cell[0]==='v'?1:0,p:rev[ch][1]};}});
+ const h=[emptyHand(),emptyHand()];
+ for(const l of lines){const m=l.match(/^(先手|後手|下手|上手)の持駒[：:](.*)/);if(!m)continue;const o=/後手|上手/.test(m[1])?1:0;
+  for(const t of m[2].split(/[\s　]+/)){const k=Object.keys(NAME).find(k=>NAME[k]===t[0]);if(!k)continue;const n=t.slice(1);h[o][k]+=n?Math.max(1,NUMK.indexOf(n)):1;}}
+ return{b,h,turn:lines.some(l=>/^(後手番|上手番)/.test(l))?1:0};}
+G.Shogi={toBOD,parseBOD,NAME,PNAME,CH1,KAN,ZEN,HAND_ORDER,HANDICAPS,initial,clone,apply,legal,inCheck,notation,kifMove,toKIF,parseKIF,positions,sq,mustPromote};
 })(typeof window!=='undefined'?window:globalThis);

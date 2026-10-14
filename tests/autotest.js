@@ -27,7 +27,7 @@ const K=['1 ７六歩(77)','2 ３四歩(33)','3 ２二角成(88)','4 同　銀(3
 const kif=n=>K.slice(0,n).join('\n');
 await pg.evaluate(()=>{for(const k of ['1 ７六歩(77)'])photo(k);show(photo(''),null)});
 await pg.click('#bAuto');await sleep(500);await pg.evaluate(()=>idle(20));
-const chk=async label=>{const r=await pg.evaluate(()=>({log:[...AUTO.log],moves:game.moves.map((m,i)=>notationAt(i)),chips:[...document.querySelectorAll('#achips button')].map(b=>b.textContent),badge:document.querySelector('#abadge').textContent}));console.log(label.padEnd(26),'| badge:',r.badge,'| log:',r.log.slice(-2).join(' '),'| chips:',r.chips.join(' / '));return r;};
+const chk=async label=>{const r=await pg.evaluate(()=>({q:(document.querySelector('#achips .q')||{}).textContent,rec:(AUTO.rec||[]).slice(0,3).map(x=>Shogi.notation(pos(),x.m)+':'+x.pTo.toFixed(2)),log:[...AUTO.log],moves:game.moves.map((m,i)=>notationAt(i)),chips:[...document.querySelectorAll('#achips button')].map(b=>b.textContent),badge:document.querySelector('#abadge').textContent}));console.log(label.padEnd(26),r.q||'',r.rec.join(','),'| badge:',r.badge,'| log:',r.log.slice(-2).join(' '),'| chips:',r.chips.join(' / '));return r;};
 const clickChip=async txt=>{const ok=await pg.evaluate(t=>{const b=[...document.querySelectorAll('#achips button')].find(b=>b.textContent===t);if(b){b.click();return true}return false},txt);console.log('   tap chip',txt,ok);await sleep(400);};
 const E=async(i,o)=>pg.evaluate((a,b,o)=>ev({before:a,after:b,...o}),kif(i),kif(i+1),o);
 await E(0,{from:[7,7],to:[7,6]});let r=await chk('1 ▲76歩');await pg.screenshot({path:SS+'auto_01_recorded.png'});
@@ -48,4 +48,6 @@ await pg.screenshot({path:SS+'auto_04_final.png'});await pg.click('#shClose');aw
 const want='▲７六歩 △３四歩 ▲２二角成 △同銀 ▲４五角打 △５二金左 ▲３四角 △６二銀';
 console.log(fin.moves.join(' ')===want?'RESULT PASS':'RESULT FAIL');
 console.log('auto-recorded:',fin.log.filter(x=>x.startsWith('auto:')).length,'tapped:',fin.log.filter(x=>x.startsWith('tap:')).length,'passes:',fin.log.filter(x=>x==='pass').length);
-console.log('errors:',errs);await br.close();})();
+const z=await pg.evaluate(async()=>{const r=await exportDataset();const b=new Uint8Array(await r.blob.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode(...b.subarray(i,i+8192));return{n:r.n,b64:btoa(s)};});
+fs.writeFileSync('/tmp/shogi-cells.zip',Buffer.from(z.b64,'base64'));console.log('zip cells',z.n);
+console.log('why',JSON.stringify(await pg.evaluate(()=>AUTO.why)));console.log('errors:',errs);await br.close();})();
