@@ -59,3 +59,12 @@ select,input[type=text]{font:inherit;min-height:44px;width:100%;background:var(-
 @keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-22px) scale(.95,1.08)}80%{transform:translateY(0) scale(1.1,.88)}100%{transform:none}}
 .eyes{animation:blink 4s infinite;transform-origin:40px 42px}@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
 .hidden{display:none!important}
+footer #bUndo{flex:.6}
+.ov{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.abadge{position:absolute;left:8px;top:8px;padding:6px 12px;border-radius:16px;font-weight:700;font-size:15px;color:#fff;background:#2e7d32}
+.abadge.motion{background:#ef6c00}.abadge.wait{background:#f9a825;color:#222}.abadge.rec{background:#1e88e5}.abadge.ask{background:#d32f2f}.abadge.init{background:#555}
+.abar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px 10px;margin:8px 0;font-size:17px;font-weight:700}
+.abar span{flex:1}
+#achips .q{font-size:14px;margin:6px 0;color:var(--fg)}
+#achips{display:flex;flex-wrap:wrap;gap:6px}#achips .q{width:100%}#achips button{min-height:48px;font-size:17px}
+.srow{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:15px}.srow input[type=range]{flex:1}.srow select{width:auto}

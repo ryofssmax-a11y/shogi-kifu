@@ -116,7 +116,7 @@ async function openCam(){const hasRef=!!(await getRef(view));
  }catch(e){if($('#cw'))$('#cw').innerHTML=`<p style="color:#fff;padding:20px">カメラを使えませんでした（${e.name||e}）。<br>「写真を選ぶ」から撮影・選択できます。</p>`;if($('#cShot'))$('#cShot').disabled=true;}
  if($('#cShot'))$('#cShot').onclick=()=>{const v=$('#vid');if(!v||!v.videoWidth)return;const cv=document.createElement('canvas');const sc=Math.min(1,1600/Math.max(v.videoWidth,v.videoHeight));cv.width=v.videoWidth*sc;cv.height=v.videoHeight*sc;cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);stopCam();toAdjust(cv,true);};}
 function placeGuide(){const v=$('#vid'),g=$('#guide');if(!v||!g||!v.videoWidth)return;const w=v.clientWidth,h=v.clientHeight,c=guideCorners(w,h);Object.assign(g.style,{left:c[0][0]+'px',top:c[0][1]+'px',width:c[1][0]-c[0][0]+'px',height:c[3][1]-c[0][1]+'px'});}
-function toAdjust(cv,fromGuide){shot=cv;const w=cv.width,h=cv.height;
+function toAdjust(cv,fromGuide,onOk){shot=cv;const w=cv.width,h=cv.height;
  corners=st.corners?st.corners.map(([x,y])=>[x*w,y*h]):guideCorners(w,h);
  openSheet('盤の四隅を合わせる',`<div class="camwrap"><canvas id="adj"></canvas></div><p class="hint">オレンジの丸を盤の四隅（マスの外枠）までドラッグしてください。「タップで指定」なら左上→右上→右下→左下の順にタップします。</p>
  <div class="row"><button id="aTap">タップで指定</button><button id="aGuide">枠に戻す</button></div><button class="pri" id="aOk" style="width:100%;min-height:56px">この範囲で読み取る</button>`);
@@ -129,7 +129,7 @@ function toAdjust(cv,fromGuide){shot=cv;const w=cv.width,h=cv.height;
   let best=-1,bd=1e9;corners.forEach((q,i)=>{const d=Math.hypot(q[0]-p[0],q[1]-p[1]);if(d<bd){bd=d;best=i}});if(bd<w/6){drag=best;c.setPointerCapture(e.pointerId);}};
  c.onpointermove=e=>{if(drag<0)return;corners[drag]=pt(e);draw();};c.onpointerup=()=>{drag=-1};
  $('#aTap').onclick=()=>{tapMode=0;draw();toast('左上の角をタップ');};$('#aGuide').onclick=()=>{corners=guideCorners(w,h);draw();};
- $('#aOk').onclick=()=>{st.corners=corners.map(([x,y])=>[x/w,y/h]);save();
+ $('#aOk').onclick=()=>{st.corners=corners.map(([x,y])=>[x/w,y/h]);save();if(onOk)return onOk();
   const img=V.rectify(shot.getContext('2d').getImageData(0,0,w,h),corners,RS);analyze(img);};}
 async function analyze(img){const ref=await getRef(view);
  if(!ref){await storePhoto(view,img);closeSheet();render();say(`${view}手目の局面を基準として保存したよ。指したらまた撮ってね`,true);return;}
