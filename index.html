@@ -1,0 +1,22 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>将棋カメラ棋譜</title><meta name="theme-color" content="#1b1d24">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="style.css"></head><body>
+<header><button id="bGames" class="ic" aria-label="対局一覧">☰</button><div class="ttl"><b id="gName">将棋カメラ棋譜</b><small id="gInfo"></small></div>
+<button id="bFlip" class="ic" aria-label="盤を反転">⇅</button><button id="bTheme" class="ic" aria-label="表示切替">🌙</button></header>
+<main>
+<div class="hand" id="hand1"></div>
+<div class="boardwrap"><div class="files" id="files"></div><div class="bw2"><div id="board"></div><div class="ranks" id="ranks"></div></div></div>
+<div class="hand" id="hand0"></div>
+<div class="status" id="status"></div>
+<div class="nav"><button id="nFirst">⏮</button><button id="nPrev">◀</button><span id="nPly">0手</span><button id="nNext">▶</button><button id="nLast">⏭</button></div>
+<div id="moves" class="moves"></div>
+</main>
+<footer><button id="bCam" class="big">📷 撮影</button><button id="bUndo">↶ 戻す</button><button id="bKif">KIF</button></footer>
+<div id="chara" class="chara"><div class="bubble" id="bubble"></div><div id="slime"></div></div>
+<div class="sheet" id="sheet"><div class="panel"><div class="ph"><b id="shTitle"></b><button class="ic" id="shClose">✕</button></div><div id="shBody"></div></div></div>
+<div id="toast"></div>
+<script src="shogi.js"></script><script src="vision.js"></script><script src="app.js"></script>
+</body></html>
