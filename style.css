@@ -68,3 +68,13 @@ footer #bUndo{flex:.6}
 #achips .q{font-size:14px;margin:6px 0;color:var(--fg)}
 #achips{display:flex;flex-wrap:wrap;gap:6px}#achips .q{width:100%}#achips button{min-height:48px;font-size:17px}
 .srow{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:15px}.srow input[type=range]{flex:1}.srow select{width:auto}
+.kento{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;margin:8px 0}
+.ktop{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.ktop b{font-size:18px}.ktst{font-size:12px;color:var(--sub)}
+.wr{position:relative;height:22px;background:#555;border-radius:11px;overflow:hidden;margin:6px 0}.wr i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ff8a3d,#ffb27a)}
+.wr span{position:absolute;top:2px;font-size:12px;font-weight:700;color:#fff}.wr .l{left:8px}.wr .r{right:8px}
+.pvl{display:flex;gap:6px;font-size:14px;padding:4px 0;border-top:1px solid var(--bd);align-items:baseline}.pvl b{color:var(--sub)}.pvs{min-width:52px;font-weight:700;text-align:right}.pvm{flex:1;line-height:1.4}
+.ktbar{height:10px;background:var(--bd);border-radius:5px;overflow:hidden}.ktbar i{display:block;height:100%;width:0;background:var(--acc)}
+.graph{width:100%;height:auto;background:var(--bg);border-radius:8px;margin-top:6px}
+.mk{font-style:normal;font-size:12px;padding:1px 6px;border-radius:8px;margin-left:4px}.mk.bad{background:#e53935;color:#fff}.mk.dub{background:#fb8c00;color:#fff}
+.nav #bKento{max-width:56px}
+.kento .row select{flex:1;width:auto;margin:0}

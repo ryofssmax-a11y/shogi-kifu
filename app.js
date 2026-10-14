@@ -156,5 +156,5 @@ $('#slime').onclick=()=>say(TIPS[tipI++%TIPS.length],true);
 // ---------- 起動 ----------
 applyTheme();if(st.cur&&st.games[st.cur])load();else newGame();
 setTimeout(()=>say(game.moves.length?'続きから記録しよう！':'こんにちは！📷で盤を撮るか、駒をタップして棋譜をつけよう'),600);
-if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');
+if('serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js');
 window.addEventListener('resize',placeGuide);
