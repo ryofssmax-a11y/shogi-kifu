@@ -118,7 +118,7 @@ const _render2=render;render=function(){_render2();const h=PLAY.hint;if(h&&PLAY.
 $('.nav').insertAdjacentHTML('beforeend','<button id="bPlay" aria-label="AIと対局">⚔️</button>');
 $('.nav').insertAdjacentHTML('afterend','<div id="playbar" class="playbar hidden"></div>');
 $('#bPlay').onclick=()=>openPlay();
-function paintBar(){const el=$('#playbar');if(!PLAY.on&&!PLAY.result){el.classList.add('hidden');return;}el.classList.toggle('hidden',!PLAY.on);if(!PLAY.on)return;
+function paintBar(){const el=$('#playbar');setTimeout(()=>{const on=PLAY.on&&!el.classList.contains('hidden');document.body.classList.toggle('playing',on);if(on)document.documentElement.style.setProperty('--pbh',el.offsetHeight+'px');},0);if(!PLAY.on&&!PLAY.result){el.classList.add('hidden');return;}el.classList.toggle('hidden',!PLAY.on);if(!PLAY.on)return;
  const e=eng(),ho=game.handicap!=='平手',nm=o=>o===e?`🤖 ${lvName(PLAY.opt.level)}`:'🙂 あなた',mk=o=>o?'△':'▲';
  const st_=PLAY.result?'終局':PLAY.thinking?'<span class="spin"></span> やねうら王が考え中…':PLAY.await?`盤で「${PLAY.awaitTxt}」を指してください`:pos().turn===e?'やねうら王の番':'あなたの番です';
  el.innerHTML=`<div class="prow"><span>${mk(1)} ${nm(1)}</span>${PLAY.clock?'<b class="pclk" id="pc1"></b>':''}</div><div class="prow"><span>${mk(0)} ${nm(0)}</span>${PLAY.clock?'<b class="pclk" id="pc0"></b>':''}</div>

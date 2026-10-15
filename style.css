@@ -88,3 +88,10 @@ footer #bUndo{flex:.6}
 .cell.hint{box-shadow:inset 0 0 0 3px #29b6f6;background:rgba(41,182,246,.25)}
 .chara.think #slime{animation:think 1s ease-in-out infinite}@keyframes think{50%{transform:scale(1.06,.94) rotate(-4deg)}}
 .pawait{padding:8px;border-radius:10px;background:rgba(255,138,61,.15);margin-bottom:8px}label.chk{display:flex;gap:6px;align-items:flex-start;font-size:13px;margin:6px 0}
+/* 対局中: 操作バーをフッターの上に固定、キャラは小さくして上へ逃がす */
+body.playing{padding-bottom:calc(88px + var(--pbh,150px) + env(safe-area-inset-bottom))}
+body.playing .playbar{position:fixed;left:0;right:0;bottom:calc(73px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;z-index:6;border-radius:12px 12px 0 0;background:var(--bg);border-top:1px solid var(--bd);box-shadow:0 -4px 12px rgba(0,0,0,.08);padding:6px 10px;box-sizing:border-box}
+body.playing .playbar .prow{padding:0;font-size:13px}body.playing .playbar .pst{margin:2px 0}
+body.playing .playbar .row button{min-height:44px}
+body.playing .chara{bottom:calc(80px + var(--pbh,150px) + env(safe-area-inset-bottom));transform:scale(.6);transform-origin:100% 100%}
+body.playing .chara .bubble{font-size:15px}
