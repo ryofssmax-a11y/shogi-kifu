@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>詰将棋道場</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+/* 初代iPad mini (iOS 9 Safari) 対応のため、CSS変数は使わず色を直書きしている */
+html,body{margin:0;}
+
+/* Layout: one column — header, then either the problem list or the board with hands above/below. Old-Safari safe (no gap, no grid). */
+html, body { height: 100%; }
+body {
+  background: #e6e9e1; background: #e6e9e1;
+  color: #1f1c17; color: #1f1c17;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+#app {
+  max-width: 720px; margin: 0 auto;
+  padding-top: 12px; padding-bottom: 24px;
+  padding-left: 16px; padding-right: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top { display: -webkit-flex; display: flex; -webkit-align-items: baseline; align-items: baseline; -webkit-justify-content: space-between; justify-content: space-between; border-bottom: 2px solid #1f1c17; padding-bottom: 8px; margin-bottom: 16px; }
+.brand { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-weight: 700; font-size: 26px; letter-spacing: .12em; margin: 0; }
+.brand b { color: #b3332a; font-weight: 700; }
+.tag { font-size: 12px; color: #6b6a60; letter-spacing: .08em; }
+
+/* ---------- menu ---------- */
+.group { margin-bottom: 28px; }
+.group h2 { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-size: 20px; margin: 0 0 4px; letter-spacing: .1em; }
+.group p { margin: 0 0 12px; color: #6b6a60; font-size: 13px; line-height: 1.6; }
+.tiles { margin: -4px; overflow: hidden; }
+.tile {
+  float: left; width: 60px; height: 60px; margin: 4px;
+  border: 1px solid #c9ccc0; background: #f4f5f0; color: #1f1c17;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif; font-size: 17px; font-variant-numeric: tabular-nums;
+  border-radius: 4px; position: relative; cursor: pointer; padding: 0;
+}
+.tile small { display: block; font-size: 10px; color: #6b6a60; }
+.tile.done { border-color: #b3332a; }
+.tile.done:after {
+  content: "済"; position: absolute; right: -5px; top: -6px; width: 20px; height: 20px; line-height: 20px;
+  border-radius: 50%; background: #b3332a; color: #fff; font-size: 11px; font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif;
+  -webkit-transform: rotate(-12deg); transform: rotate(-12deg);
+}
+.tile:focus { outline: 2px solid #b3332a; outline-offset: 1px; }
+.score { font-size: 13px; color: #6b6a60; margin-top: 6px; }
+.reset { background: none; border: none; color: #6b6a60; text-decoration: underline; font-size: 12px; padding: 0; cursor: pointer; margin-top: 4px; }
+
+/* ---------- game ---------- */
+.gamehead { display: -webkit-flex; display: flex; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; align-items: center; margin-bottom: 8px; }
+.gamehead h2 { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-size: 20px; margin: 0; letter-spacing: .08em; }
+.btn {
+  border: 1px solid #1f1c17; background: #f4f5f0; color: #1f1c17;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif; font-size: 15px; padding: 9px 14px; border-radius: 4px; cursor: pointer;
+  margin: 0 6px 6px 0;
+}
+.btn.primary { background: #b3332a; border-color: #b3332a; color: #fff; }
+.btn.ghost { border-color: #c9ccc0; }
+.btn:focus { outline: 2px solid #b3332a; outline-offset: 1px; }
+.btn[disabled] { opacity: .4; }
+
+.hand { min-height: 44px; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap; font-size: 13px; color: #6b6a60; }
+.hand .lbl { margin-right: 10px; letter-spacing: .08em; }
+.hp { position: relative; margin-right: 8px; cursor: pointer; border-radius: 4px; padding: 2px; }
+.hp.sel { background: rgba(47, 107, 58, .35); }
+.hp.hint { background: rgba(214, 160, 20, .55); }
+.hp .n { position: absolute; right: -4px; bottom: -2px; font-size: 12px; color: #1f1c17; font-weight: 700; }
+
+.boardwrap { display: -webkit-flex; display: flex; -webkit-justify-content: center; justify-content: center; margin: 4px 0; }
+.files { overflow: hidden; color: #6b6a60; font-size: 12px; }
+.files span { float: left; text-align: center; }
+.ranks { color: #6b6a60; font-size: 12px; }
+.ranks span { display: block; text-align: center; width: 18px; }
+#board { position: relative; background: #d8b36a; border: 2px solid #6b5026; box-sizing: content-box; }
+.cell { position: absolute; border-right: 1px solid #6b5026; border-bottom: 1px solid #6b5026; box-sizing: border-box; cursor: pointer; }
+.cell.last { background: rgba(179, 51, 42, .18); }
+.cell.sel { background: rgba(47, 107, 58, .35); }
+.cell.hint { background: rgba(214, 160, 20, .55); }
+.cell.dest:before { content: ""; position: absolute; left: 50%; top: 50%; width: 26%; height: 26%; margin-left: -13%; margin-top: -13%; border-radius: 50%; background: rgba(31, 28, 23, .28); }
+.cell.dest.cap:before { width: 84%; height: 84%; margin-left: -42%; margin-top: -42%; background: none; border: 3px solid rgba(31, 28, 23, .28); box-sizing: border-box; z-index: 2; }
+.star { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #6b5026; margin: -3px 0 0 -3px; }
+
+.pc {
+  position: absolute; left: 7%; top: 5%; width: 86%; height: 90%;
+  background: #f6e4b8;
+  -webkit-clip-path: polygon(50% 0, 86% 14%, 100% 100%, 0 100%, 14% 14%);
+  clip-path: polygon(50% 0, 86% 14%, 100% 100%, 0 100%, 14% 14%);
+  text-align: center; font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-weight: 700; color: #1f1c17;
+  box-shadow: inset 0 -3px 0 #8c6a33;
+}
+.pc.g { -webkit-transform: rotate(180deg); transform: rotate(180deg); }
+.pc.pr { color: #b3332a; }
+.hp .pc { position: relative; left: 0; top: 0; display: block; }
+
+.status { min-height: 48px; font-size: 16px; line-height: 1.5; margin: 6px 0 4px; }
+.status.good { color: #2f6b3a; font-weight: 700; }
+.status.bad { color: #b3332a; font-weight: 700; }
+.kifu { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-size: 15px; color: #6b6a60; min-height: 22px; letter-spacing: .04em; }
+.promo { background: #f4f5f0; border: 1px solid #1f1c17; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+.promo p { margin: 0 0 8px; }
+.stamp {
+  display: inline-block; border: 3px solid #b3332a; color: #b3332a; font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif;
+  font-size: 22px; padding: 2px 10px; margin-right: 10px; letter-spacing: .1em; border-radius: 4px;
+  -webkit-transform: rotate(-6deg); transform: rotate(-6deg);
+}
+.rules { font-size: 12px; color: #6b6a60; line-height: 1.7; margin-top: 14px; border-top: 1px solid #c9ccc0; padding-top: 10px; }
+@media (prefers-reduced-motion: reduce) { * { -webkit-transition: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <h1 class="brand">詰将棋<b>道場</b></h1>
+    <span class="tag">一手詰・三手詰 全40問</span>
+  </div>
+
+  <div id="menu">
+    <div class="group">
+      <h2>一手詰</h2>
+      <p>一手で玉を詰ませる問題です。駒をタップしてから、動かしたいマスをタップします。</p>
+      <div class="tiles" id="tiles1"></div>
+    </div>
+    <div class="group">
+      <h2>三手詰</h2>
+      <p>王手→相手の応手→王手で詰ませる問題です。相手の手はゲームが指します。</p>
+      <div class="tiles" id="tiles3"></div>
+    </div>
+    <div class="score" id="score"></div>
+    <button class="reset" id="resetBtn" type="button">解いた記録を消す</button>
+    <div id="resetConfirm" class="promo" hidden>
+      <p>解いた記録をすべて消しますか？</p>
+      <button class="btn primary" id="resetYes" type="button">消す</button>
+      <button class="btn ghost" id="resetNo" type="button">やめる</button>
+    </div>
+  </div>
+
+  <div id="game" hidden>
+    <div class="gamehead">
+      <h2 id="title"></h2>
+      <button class="btn ghost" id="backBtn" type="button" style="margin:0">一覧へ</button>
+    </div>
+    <div class="hand" id="goteHand"><span class="lbl">△後手 持駒</span><span>残り全部</span></div>
+    <div class="boardwrap">
+      <div>
+        <div class="files" id="files"></div>
+        <div id="board"></div>
+      </div>
+      <div class="ranks" id="ranks"></div>
+    </div>
+    <div class="hand" id="senteHand"></div>
+    <div id="promo" class="promo" hidden>
+      <p>成りますか？</p>
+      <button class="btn primary" id="promoYes" type="button">成る</button>
+      <button class="btn ghost" id="promoNo" type="button">成らない</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="kifu" id="kifu"></div>
+    <div>
+      <button class="btn ghost" id="retryBtn" type="button">やり直し</button>
+      <button class="btn ghost" id="hintBtn" type="button">ヒント</button>
+      <button class="btn" id="nextBtn" type="button">次の問題</button>
+    </div>
+    <div class="rules">詰将棋のルール：攻め方（▲先手）は毎回王手をかけます。玉方（△後手）は盤上にない駒をすべて持駒として使えます。打ち歩詰め・二歩は反則です。</div>
+  </div>
+</div>
+
+<script>
+var SG = (function () {
+  var KIN = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,0]];
+  var ALL8 = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+  var DIAG = [[-1,-1],[-1,1],[1,-1],[1,1]];
+  var ORTH = [[-1,0],[0,-1],[0,1],[1,0]];
+  var STEPS = [], SLIDES = [];
+  for (var i = 0; i < 16; i++) { STEPS[i] = []; SLIDES[i] = []; }
+  STEPS[1] = [[-1,0]];
+  SLIDES[2] = [[-1,0]];
+  STEPS[3] = [[-2,-1],[-2,1]];
+  STEPS[4] = [[-1,-1],[-1,0],[-1,1],[1,-1],[1,1]];
+  STEPS[5] = KIN; STEPS[9] = KIN; STEPS[10] = KIN; STEPS[11] = KIN; STEPS[12] = KIN;
+  SLIDES[6] = DIAG; SLIDES[7] = ORTH;
+  STEPS[8] = ALL8;
+  STEPS[14] = ORTH; SLIDES[14] = DIAG;
+  STEPS[15] = DIAG; SLIDES[15] = ORTH;
+
+  function hi(s) { return s === 1 ? 0 : 1; }
+  function clone(p) { return { b: p.b.slice(), h: [p.h[0].slice(), p.h[1].slice()], t: p.t }; }
+  function findKing(b, s) { for (var i = 0; i < 81; i++) if (b[i] === 8 * s) return i; return -1; }
+  function has(list, dr, dc) {
+    for (var i = 0; i < list.length; i++) if (list[i][0] === dr && list[i][1] === dc) return true;
+    return false;
+  }
+  function attacked(b, sq, s) {
+    var r0 = (sq / 9) | 0, c0 = sq % 9, d, r, c, k, p, t;
+    for (d = 0; d < 8; d++) {
+      var dr = ALL8[d][0], dc = ALL8[d][1];
+      r = r0 + dr; c = c0 + dc; k = 1;
+      while (r >= 0 && r < 9 && c >= 0 && c < 9) {
+        p = b[r * 9 + c];
+        if (p !== 0) {
+          if (p * s > 0) {
+            t = p < 0 ? -p : p;
+            if (k === 1 && has(STEPS[t], -dr * s, -dc)) return true;
+            if (has(SLIDES[t], -dr * s, -dc)) return true;
+          }
+          break;
+        }
+        r += dr; c += dc; k++;
+      }
+    }
+    r = r0 + 2 * s;
+    if (r >= 0 && r < 9) {
+      if (c0 - 1 >= 0 && b[r * 9 + c0 - 1] === 3 * s) return true;
+      if (c0 + 1 < 9 && b[r * 9 + c0 + 1] === 3 * s) return true;
+    }
+    return false;
+  }
+  function inZone(r, s) { return s === 1 ? r <= 2 : r >= 6; }
+  function deadRow(t, r, s) {
+    var rr = s === 1 ? r : 8 - r;
+    if ((t === 1 || t === 2) && rr === 0) return true;
+    if (t === 3 && rr <= 1) return true;
+    return false;
+  }
+  function pseudo(pos) {
+    var b = pos.b, s = pos.t, out = [], sq, p, t, i, r0, c0, r, c, to, st, sl;
+    function add(f, to, t) {
+      var fr = (f / 9) | 0, tr = (to / 9) | 0;
+      var canP = (t <= 7 && t !== 5) && (inZone(fr, s) || inZone(tr, s));
+      if (!deadRow(t, tr, s)) out.push({ f: f, to: to, t: t, pr: false, d: false });
+      if (canP) out.push({ f: f, to: to, t: t, pr: true, d: false });
+    }
+    for (sq = 0; sq < 81; sq++) {
+      p = b[sq];
+      if (p * s <= 0) continue;
+      t = p < 0 ? -p : p;
+      r0 = (sq / 9) | 0; c0 = sq % 9;
+      st = STEPS[t];
+      for (i = 0; i < st.length; i++) {
+        r = r0 + st[i][0] * s; c = c0 + st[i][1];
+        if (r < 0 || r > 8 || c < 0 || c > 8) continue;
+        to = r * 9 + c;
+        if (b[to] * s > 0) continue;
+        add(sq, to, t);
+      }
+      sl = SLIDES[t];
+      for (i = 0; i < sl.length; i++) {
+        var dr = sl[i][0] * s, dc = sl[i][1];
+        r = r0 + dr; c = c0 + dc;
+        while (r >= 0 && r < 9 && c >= 0 && c < 9) {
+          to = r * 9 + c;
+          if (b[to] * s > 0) break;
+          add(sq, to, t);
+          if (b[to] !== 0) break;
+          r += dr; c += dc;
+        }
+      }
+    }
+    var hand = pos.h[hi(s)], fuFile = [];
+    for (c = 0; c < 9; c++) {
+      fuFile[c] = false;
+      for (r = 0; r < 9; r++) if (b[r * 9 + c] === s) fuFile[c] = true;
+    }
+    for (t = 1; t <= 7; t++) {
+      if (!hand[t]) continue;
+      for (sq = 0; sq < 81; sq++) {
+        if (b[sq] !== 0) continue;
+        r = (sq / 9) | 0; c = sq % 9;
+        if (deadRow(t, r, s)) continue;
+        if (t === 1 && fuFile[c]) continue;
+        out.push({ f: -1, to: sq, t: t, pr: false, d: true });
+      }
+    }
+    return out;
+  }
+  function make(pos, m) {
+    var q = clone(pos), s = pos.t;
+    if (m.d) {
+      q.b[m.to] = s * m.t;
+      q.h[hi(s)][m.t]--;
+    } else {
+      var cap = q.b[m.to];
+      if (cap !== 0) {
+        var ct = cap < 0 ? -cap : cap;
+        if (ct > 8) ct -= 8;
+        q.h[hi(s)][ct]++;
+      }
+      q.b[m.to] = s * (m.pr ? m.t + 8 : m.t);
+      q.b[m.f] = 0;
+    }
+    q.t = -s;
+    return q;
+  }
+  function inCheck(pos) {
+    var k = findKing(pos.b, pos.t);
+    return k >= 0 && attacked(pos.b, k, -pos.t);
+  }
+  function legalOne(pos, m) {
+    var s = pos.t, q = make(pos, m);
+    var k = findKing(q.b, s);
+    if (k >= 0 && attacked(q.b, k, -s)) return null;
+    if (m.d && m.t === 1) {
+      var ok = findKing(q.b, -s);
+      if (ok >= 0 && ok === m.to - 9 * s && attacked(q.b, ok, s) && !hasLegal(q)) return null;
+    }
+    return q;
+  }
+  function legalMoves(pos) {
+    var ps = pseudo(pos), out = [];
+    for (var i = 0; i < ps.length; i++) if (legalOne(pos, ps[i])) out.push(ps[i]);
+    return out;
+  }
+  function hasLegal(pos) {
+    var ps = pseudo(pos);
+    for (var i = 0; i < ps.length; i++) {
+      var q = make(pos, ps[i]);
+      var k = findKing(q.b, pos.t);
+      if (!(k >= 0 && attacked(q.b, k, -pos.t))) return true;
+    }
+    return false;
+  }
+  function checkMoves(pos) {
+    var ps = pseudo(pos), out = [];
+    for (var i = 0; i < ps.length; i++) {
+      var q = legalOne(pos, ps[i]);
+      if (q && inCheck(q)) out.push(ps[i]);
+    }
+    return out;
+  }
+  function wins(pos, n) {
+    var ms = checkMoves(pos);
+    for (var i = 0; i < ms.length; i++) if (winsAfter(make(pos, ms[i]), n - 1)) return true;
+    return false;
+  }
+  function winsAfter(q, n) {
+    if (!inCheck(q)) return false;
+    var rs = legalMoves(q);
+    if (rs.length === 0) return true;
+    if (n === 0) return false;
+    for (var i = 0; i < rs.length; i++) if (!wins(make(q, rs[i]), n - 1)) return false;
+    return true;
+  }
+  function solutions(pos, n) {
+    var ms = checkMoves(pos), out = [];
+    for (var i = 0; i < ms.length; i++) if (winsAfter(make(pos, ms[i]), n - 1)) out.push(ms[i]);
+    return out;
+  }
+  function bestDefense(q, n) {
+    var rs = legalMoves(q), best = null, bestCount = 1e9;
+    for (var i = 0; i < rs.length; i++) {
+      var p2 = make(q, rs[i]);
+      var cnt = solutions(p2, n).length;
+      if (cnt === 0) return rs[i];
+      var bonus = rs[i].d ? 0.5 : 0;
+      if (cnt + bonus < bestCount) { bestCount = cnt + bonus; best = rs[i]; }
+    }
+    return best;
+  }
+  function same(a, b) { return a.f === b.f && a.to === b.to && a.t === b.t && a.pr === b.pr && a.d === b.d; }
+  return {
+    clone: clone, make: make, legalMoves: legalMoves, checkMoves: checkMoves,
+    inCheck: inCheck, solutions: solutions, wins: wins, winsAfter: winsAfter,
+    bestDefense: bestDefense, same: same, findKing: findKing
+  };
+})();
+if (typeof module !== 'undefined') module.exports = SG;
+
+var PUZZLES = [{"n":1,"p":[[0,-8],[1,-3],[18,9],[19,-2]],"h":[0,0,1,0,0,0,0,0],"s":[-1,9,2,0,1]},{"n":1,"p":[[9,6],[18,-8],[29,5]],"h":[0,0,0,0,0,0,0,0],"s":[9,19,6,1,0]},{"n":1,"p":[[6,-2],[8,-5],[17,-8],[24,-2],[33,15],[34,9]],"h":[0,0,0,0,0,0,0,0],"s":[33,25,15,0,0]},{"n":1,"p":[[8,-8],[15,15],[16,-4],[23,14],[25,-4],[26,-9]],"h":[0,0,0,0,0,0,0,0],"s":[15,7,15,0,0]},{"n":1,"p":[[18,-8],[27,-2],[29,4],[37,-4]],"h":[0,0,0,0,0,1,0,0],"s":[-1,19,5,0,1]},{"n":1,"p":[[8,-8],[17,-4],[24,-9],[34,7]],"h":[0,0,0,0,1,0,0,0],"s":[-1,16,4,0,1]},{"n":1,"p":[[8,-8],[26,6]],"h":[0,0,0,0,0,1,0,0],"s":[-1,16,5,0,1]},{"n":1,"p":[[2,4],[3,-8],[5,-1]],"h":[0,0,0,0,0,1,0,0],"s":[-1,12,5,0,1]},{"n":1,"p":[[18,-8],[29,5],[47,6]],"h":[0,0,0,0,0,1,0,0],"s":[-1,19,5,0,1]},{"n":1,"p":[[25,4],[26,-8],[43,5]],"h":[0,0,0,0,0,0,0,0],"s":[43,35,5,0,0]},{"n":1,"p":[[6,-8],[13,-1],[14,-1],[24,5]],"h":[0,0,0,0,0,1,0,0],"s":[-1,15,5,0,1]},{"n":1,"p":[[0,-5],[2,-5],[9,-8],[11,4],[28,4],[29,-5]],"h":[0,0,0,0,0,0,0,0],"s":[28,19,4,1,0]},{"n":1,"p":[[2,-9],[4,-8],[13,6],[23,-6],[31,3]],"h":[0,0,0,0,0,1,0,0],"s":[-1,14,5,0,1]},{"n":1,"p":[[9,-8],[19,7],[20,-1],[27,-4],[28,-1]],"h":[0,0,0,0,0,1,0,0],"s":[-1,10,5,0,1]},{"n":1,"p":[[6,-8],[13,-9],[22,-1],[24,5],[25,-5]],"h":[0,0,0,0,0,1,0,0],"s":[-1,15,5,0,1]},{"n":1,"p":[[2,14],[6,7],[14,-8],[21,5]],"h":[0,0,0,0,0,0,0,0],"s":[2,22,14,0,0]},{"n":1,"p":[[14,5],[16,-6],[24,-8],[35,7],[41,2],[43,-7]],"h":[0,0,0,0,1,0,0,0],"s":[-1,33,4,0,1]},{"n":1,"p":[[0,-8],[2,9],[9,-2],[18,-5],[27,3]],"h":[0,0,0,0,0,0,1,0],"s":[-1,10,6,0,1]},{"n":1,"p":[[0,-5],[2,-8],[9,-5],[13,15],[21,-2]],"h":[0,0,0,0,0,1,0,0],"s":[-1,11,5,0,1]},{"n":1,"p":[[6,-1],[17,-8],[32,14],[34,9]],"h":[0,0,0,0,0,0,0,1],"s":[-1,8,7,0,1]},{"n":3,"p":[[6,5],[7,-4],[8,-8],[16,-4],[26,1],[33,2]],"h":[0,0,0,0,0,0,0,0],"s":[6,7,5,0,0],"d":[8,7,8,0,0]},{"n":3,"p":[[8,-8],[24,5]],"h":[0,0,0,0,1,0,1,0],"s":[-1,16,4,0,1],"d":[8,17,8,0,0]},{"n":3,"p":[[26,-8],[33,-1],[35,-5],[44,5],[52,15]],"h":[0,0,0,0,0,0,0,0],"s":[44,35,5,0,0],"d":[26,35,8,0,0]},{"n":3,"p":[[15,14],[17,-8],[35,14]],"h":[0,0,0,0,0,0,0,0],"s":[35,25,14,0,0],"d":[17,8,8,0,0]},{"n":3,"p":[[1,-8],[19,-4],[20,7],[29,3]],"h":[0,0,0,0,0,0,0,0],"s":[20,19,7,1,0],"d":[1,2,8,0,0]},{"n":3,"p":[[26,-8],[32,3],[34,-1],[41,6],[44,-1],[53,2]],"h":[0,0,0,0,0,1,0,0],"s":[53,44,2,0,0],"d":[26,16,8,0,0]},{"n":3,"p":[[15,15],[17,-5],[24,6],[26,-8],[35,3]],"h":[0,0,0,0,0,0,0,0],"s":[15,17,15,0,0],"d":[26,17,8,0,0]},{"n":3,"p":[[24,11],[25,-1],[26,-8],[53,11]],"h":[0,0,0,0,1,1,0,0],"s":[-1,16,4,0,1],"d":[26,34,8,0,0]},{"n":3,"p":[[18,-8],[21,14],[27,-4],[30,6],[36,9]],"h":[0,0,1,0,1,0,0,0],"s":[-1,28,4,0,1],"d":[18,9,8,0,0]},{"n":3,"p":[[5,-7],[7,-8],[24,15]],"h":[0,0,0,0,1,0,0,0],"s":[-1,16,4,0,1],"d":[7,17,8,0,0]},{"n":3,"p":[[12,7],[19,-8],[20,6],[27,-5],[28,-4],[29,1]],"h":[0,0,0,0,0,0,1,0],"s":[-1,9,6,0,1],"d":[19,18,8,0,0]},{"n":3,"p":[[16,-8],[17,-6],[35,14],[42,2]],"h":[0,0,0,0,1,0,0,0],"s":[42,15,2,1,0],"d":[16,8,8,0,0]},{"n":3,"p":[[0,-8],[3,5],[11,-4],[18,5]],"h":[0,0,0,0,0,0,1,0],"s":[-1,10,6,0,1],"d":[0,1,8,0,0]},{"n":3,"p":[[3,-2],[12,-8],[23,5],[30,-4],[31,14]],"h":[0,0,0,0,0,1,0,0],"s":[-1,21,5,0,1],"d":[12,2,8,0,0]},{"n":3,"p":[[9,-8],[10,-1],[21,15]],"h":[0,0,1,0,1,0,0,0],"s":[-1,18,2,0,1],"d":[9,1,8,0,0]},{"n":3,"p":[[9,-8],[10,6]],"h":[0,0,0,0,0,1,0,1],"s":[-1,18,5,0,1],"d":[9,1,8,0,0]},{"n":3,"p":[[3,-8],[5,-3],[6,4],[20,11],[32,15]],"h":[0,0,0,1,0,0,1,0],"s":[-1,11,6,0,1],"d":[3,13,8,0,0]},{"n":3,"p":[[7,4],[16,-8],[23,11]],"h":[0,0,0,0,1,1,0,0],"s":[-1,24,4,0,1],"d":[16,25,8,0,0]},{"n":3,"p":[[17,-8],[24,4],[44,1]],"h":[0,0,0,0,1,0,0,1],"s":[-1,16,7,0,1],"d":[17,8,8,0,0]},{"n":3,"p":[[10,-8],[21,5],[39,6]],"h":[0,0,0,0,0,0,0,1],"s":[-1,9,7,0,1],"d":[10,1,8,0,0]}];
+(function () {
+  var NAME = ['', '歩', '香', '桂', '銀', '金', '角', '飛', '玉', 'と', '杏', '圭', '全', '', '馬', '龍'];
+  var ZEN = '０１２３４５６７８９', KAN = '〇一二三四五六七八九';
+  var TOTAL = [0, 18, 4, 4, 4, 4, 2, 2];
+  var $ = function (id) { return document.getElementById(id); };
+
+  var solved = {};
+  try { solved = JSON.parse(localStorage.getItem('tsume-dojo-solved') || '{}') || {}; } catch (e) { solved = {}; }
+  function saveSolved() { try { localStorage.setItem('tsume-dojo-solved', JSON.stringify(solved)); } catch (e) {} }
+
+  var S = { idx: -1, pz: null, pos: null, ply: 0, sel: null, moves: [], lock: false, log: [], last: -1, prevTo: -1, hint: 0, pending: null, done: false };
+  var cells = [], cellSize = 40;
+
+  function mk(a) { return { f: a[0], to: a[1], t: a[2], pr: !!a[3], d: !!a[4] }; }
+  function startPos(pz) {
+    var b = [], i, u = [0, 0, 0, 0, 0, 0, 0, 0];
+    for (i = 0; i < 81; i++) b[i] = 0;
+    for (i = 0; i < pz.p.length; i++) {
+      var sq = pz.p[i][0], p = pz.p[i][1], t = p < 0 ? -p : p;
+      b[sq] = p; if (t !== 8) u[t > 8 ? t - 8 : t]++;
+    }
+    var gh = [0];
+    for (var t2 = 1; t2 < 8; t2++) gh[t2] = TOTAL[t2] - u[t2] - pz.h[t2];
+    return { b: b, h: [pz.h.slice(), gh], t: 1 };
+  }
+  function inZone(r, s) { return s === 1 ? r <= 2 : r >= 6; }
+  function note(m, side) {
+    var c = m.to % 9, r = (m.to / 9) | 0;
+    var sq = m.to === S.prevTo ? '同' : ZEN.charAt(9 - c) + KAN.charAt(r + 1);
+    var suf = '';
+    if (m.d) suf = '打';
+    else if (m.pr) suf = '成';
+    else if (m.t <= 7 && m.t !== 5 && (inZone((m.f / 9) | 0, side) || inZone(r, side))) suf = '不成';
+    return (side === 1 ? '▲' : '△') + sq + NAME[m.t] + suf;
+  }
+  function label(i) { var pz = PUZZLES[i]; var k = 0; for (var j = 0; j <= i; j++) if (PUZZLES[j].n === pz.n) k++; return { n: pz.n, k: k }; }
+
+  /* ---------- menu ---------- */
+  function buildMenu() {
+    var t1 = $('tiles1'), t3 = $('tiles3'), cnt = 0;
+    t1.innerHTML = ''; t3.innerHTML = '';
+    for (var i = 0; i < PUZZLES.length; i++) {
+      var l = label(i), b = document.createElement('button');
+      b.className = 'tile' + (solved[i] ? ' done' : '');
+      b.type = 'button';
+      b.innerHTML = '<small>第</small>' + l.k;
+      b.setAttribute('data-i', i);
+      b.onclick = function () { openPuzzle(+this.getAttribute('data-i')); };
+      (l.n === 1 ? t1 : t3).appendChild(b);
+      if (solved[i]) cnt++;
+    }
+    $('score').innerHTML = '解いた問題：' + cnt + ' / ' + PUZZLES.length;
+  }
+  $('resetBtn').onclick = function () { $('resetConfirm').hidden = false; };
+  $('resetNo').onclick = function () { $('resetConfirm').hidden = true; };
+  $('resetYes').onclick = function () { solved = {}; saveSolved(); $('resetConfirm').hidden = true; buildMenu(); };
+
+  /* ---------- board ---------- */
+  function layout() {
+    var W = document.documentElement.clientWidth, H = window.innerHeight;
+    var avail = Math.min(W - 32 - 22, 560);
+    var byH = H - 330;
+    if (byH > 200 && byH < avail) avail = byH;
+    cellSize = Math.max(28, Math.floor(avail / 9));
+    var board = $('board');
+    board.style.width = cellSize * 9 + 'px';
+    board.style.height = cellSize * 9 + 'px';
+    for (var i = 0; i < 81; i++) {
+      var r = (i / 9) | 0, c = i % 9, el = cells[i];
+      el.style.left = c * cellSize + 'px';
+      el.style.top = r * cellSize + 'px';
+      el.style.width = cellSize + 'px';
+      el.style.height = cellSize + 'px';
+      if (c === 8) el.style.borderRight = 'none';
+      if (r === 8) el.style.borderBottom = 'none';
+    }
+    var stars = board.getElementsByClassName('star');
+    var sp = [[3, 3], [3, 6], [6, 3], [6, 6]];
+    for (var s = 0; s < stars.length; s++) { stars[s].style.left = sp[s][1] * cellSize + 'px'; stars[s].style.top = sp[s][0] * cellSize + 'px'; }
+    var f = '', k = '';
+    for (var j = 0; j < 9; j++) f += '<span style="width:' + cellSize + 'px">' + (9 - j) + '</span>';
+    $('files').innerHTML = f;
+    $('files').style.marginLeft = '2px';
+    k = '<span style="height:16px"></span>';
+    for (j = 0; j < 9; j++) k += '<span style="height:' + cellSize + 'px;line-height:' + cellSize + 'px">' + KAN.charAt(j + 1) + '</span>';
+    $('ranks').innerHTML = k;
+    $('files').style.height = '16px';
+    if (S.pos) render();
+  }
+  function buildBoard() {
+    var board = $('board');
+    for (var i = 0; i < 81; i++) {
+      var el = document.createElement('div');
+      el.className = 'cell';
+      el.setAttribute('data-sq', i);
+      el.onclick = function () { tapCell(+this.getAttribute('data-sq')); };
+      board.appendChild(el); cells.push(el);
+    }
+    for (var s = 0; s < 4; s++) { var st = document.createElement('div'); st.className = 'star'; board.appendChild(st); }
+  }
+  function pieceHTML(p, size, extra) {
+    var t = p < 0 ? -p : p, fs = Math.round(size * 0.56);
+    var cls = 'pc' + (p < 0 ? ' g' : '') + (t > 8 ? ' pr' : '');
+    return '<div class="' + cls + '" style="' + (extra || '') + 'font-size:' + fs + 'px;line-height:' + Math.round(size * 0.98) + 'px">' + NAME[t] + '</div>';
+  }
+  function destSet() {
+    var d = {};
+    if (!S.sel) return d;
+    for (var i = 0; i < S.moves.length; i++) {
+      var m = S.moves[i];
+      if (S.sel.d ? (m.d && m.t === S.sel.d) : (!m.d && m.f === S.sel.f)) d[m.to] = 1;
+    }
+    return d;
+  }
+  function hintMove() {
+    if (S.ply === 0) return mk(S.pz.s);
+    var sols = SG.solutions(S.pos, 1);
+    return sols[0];
+  }
+  function render() {
+    var b = S.pos.b, d = destSet(), hm = S.hint ? hintMove() : null;
+    for (var i = 0; i < 81; i++) {
+      var cls = 'cell';
+      if (i === S.last) cls += ' last';
+      if (S.sel && !S.sel.d && S.sel.f === i) cls += ' sel';
+      if (hm && !hm.d && hm.f === i) cls += ' hint';
+      if (hm && S.hint > 1 && hm.to === i) cls += ' hint';
+      if (d[i]) cls += ' dest' + (b[i] ? ' cap' : '');
+      cells[i].className = cls;
+      cells[i].innerHTML = b[i] ? pieceHTML(b[i], cellSize) : '';
+    }
+    var h = S.pos.h[0], html = '<span class="lbl">▲先手 持駒</span>', any = false, hs = Math.max(34, Math.round(cellSize * 0.9));
+    for (var t = 7; t >= 1; t--) {
+      if (!h[t]) continue; any = true;
+      var c = 'hp';
+      if (S.sel && S.sel.d === t) c += ' sel';
+      if (hm && hm.d && hm.t === t) c += ' hint';
+      html += '<span class="' + c + '" data-t="' + t + '" style="width:' + hs + 'px;height:' + hs + 'px">' +
+        pieceHTML(t, hs, 'width:' + hs + 'px;height:' + hs + 'px;') +
+        (h[t] > 1 ? '<span class="n">' + h[t] + '</span>' : '') + '</span>';
+    }
+    if (!any) html += '<span>なし</span>';
+    var sh = $('senteHand');
+    sh.innerHTML = html;
+    var hps = sh.getElementsByClassName('hp');
+    for (var k = 0; k < hps.length; k++) hps[k].onclick = function () { tapHand(+this.getAttribute('data-t')); };
+    $('kifu').innerHTML = S.log.join('　');
+    $('hintBtn').disabled = S.done;
+  }
+  function setStatus(text, cls) { var s = $('status'); s.className = 'status' + (cls ? ' ' + cls : ''); s.innerHTML = text; }
+
+  /* ---------- play ---------- */
+  function openPuzzle(i) {
+    S.idx = i; S.pz = PUZZLES[i]; S.pos = startPos(S.pz); S.ply = 0; S.sel = null; S.lock = false;
+    S.log = []; S.last = -1; S.prevTo = -1; S.hint = 0; S.done = false;
+    S.moves = SG.legalMoves(S.pos);
+    var l = label(i);
+    $('title').innerHTML = (l.n === 1 ? '一手詰' : '三手詰') + '　第' + l.k + '問';
+    $('menu').hidden = true; $('game').hidden = false; $('promo').hidden = true;
+    $('nextBtn').className = 'btn';
+    setStatus(l.n === 1 ? '▲先手の番です。一手で詰ませてください。' : '▲先手の番です。三手で詰ませてください。');
+    layout();
+    window.scrollTo(0, 0);
+  }
+  function tapHand(t) {
+    if (S.lock || S.done) return;
+    S.sel = (S.sel && S.sel.d === t) ? null : { d: t };
+    $('promo').hidden = true; render();
+  }
+  function tapCell(sq) {
+    if (S.lock || S.done) return;
+    var d = destSet();
+    if (S.sel && d[sq]) { tryMove(sq); return; }
+    if (S.pos.b[sq] > 0) S.sel = (S.sel && S.sel.f === sq) ? null : { f: sq };
+    else S.sel = null;
+    $('promo').hidden = true; render();
+  }
+  function tryMove(to) {
+    var c = [];
+    for (var i = 0; i < S.moves.length; i++) {
+      var m = S.moves[i];
+      if (m.to !== to) continue;
+      if (S.sel.d ? (m.d && m.t === S.sel.d) : (!m.d && m.f === S.sel.f)) c.push(m);
+    }
+    if (c.length === 1) { play(c[0]); return; }
+    S.pending = c; $('promo').hidden = false;
+  }
+  function pickPromo(pr) {
+    if (!S.pending) return;
+    for (var i = 0; i < S.pending.length; i++) if (S.pending[i].pr === pr) { var m = S.pending[i]; S.pending = null; $('promo').hidden = true; play(m); return; }
+  }
+  $('promoYes').onclick = function () { pickPromo(true); };
+  $('promoNo').onclick = function () { pickPromo(false); };
+
+  function play(m) {
+    var before = S.pos, q = SG.make(S.pos, m), check = SG.inCheck(q);
+    var lastPly = S.pz.n === 1 || S.ply === 2;
+    var good;
+    if (lastPly) good = check && SG.legalMoves(q).length === 0;
+    else good = SG.same(m, mk(S.pz.s));
+    S.sel = null;
+    if (!good) {
+      var keepLast = S.last, keepPrev = S.prevTo;
+      S.pos = q; S.last = m.to; S.lock = true; render();
+      setStatus(!check ? '✕ 王手になっていません。詰将棋は毎回王手をかけます。' : '✕ その手では詰みません。', 'bad');
+      setTimeout(function () {
+        S.pos = before; S.last = keepLast; S.prevTo = keepPrev; S.lock = false; render();
+        setStatus('もう一度考えてみましょう。');
+      }, 1300);
+      return;
+    }
+    S.log.push(note(m, 1)); S.prevTo = m.to; S.pos = q; S.last = m.to; S.hint = 0;
+    if (lastPly) { finish(); return; }
+    S.lock = true; render();
+    setStatus('○ 正解の王手です。相手が応じます…', 'good');
+    setTimeout(function () {
+      var dm = mk(S.pz.d);
+      S.log.push(note(dm, -1)); S.prevTo = dm.to;
+      S.pos = SG.make(S.pos, dm); S.last = dm.to; S.ply = 2;
+      S.moves = SG.legalMoves(S.pos); S.lock = false; render();
+      setStatus('▲先手の番です。あと一手で詰みます。');
+    }, 700);
+  }
+  function finish() {
+    S.done = true; S.lock = false; solved[S.idx] = 1; saveSolved(); render();
+    setStatus('<span class="stamp">詰み</span>お見事です。', 'good');
+    $('nextBtn').className = 'btn primary';
+  }
+  $('retryBtn').onclick = function () { if (!S.lock) openPuzzle(S.idx); };
+  $('hintBtn').onclick = function () {
+    if (S.lock || S.done) return;
+    S.hint = Math.min(2, S.hint + 1); S.sel = null; render();
+    if (S.hint === 1) setStatus('ヒント：光っている駒を使います。もう一度押すと行き先も見せます。');
+    else setStatus('答え：' + note(hintMove(), 1));
+  };
+  $('nextBtn').onclick = function () {
+    var n = -1;
+    for (var k = 1; k <= PUZZLES.length; k++) { var j = (S.idx + k) % PUZZLES.length; if (!solved[j]) { n = j; break; } }
+    if (n < 0) n = (S.idx + 1) % PUZZLES.length;
+    openPuzzle(n);
+  };
+  $('backBtn').onclick = function () { $('game').hidden = true; $('menu').hidden = false; buildMenu(); window.scrollTo(0, 0); };
+
+  buildBoard(); buildMenu();
+  var rt = null;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (!$('game').hidden) layout(); }, 120); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { if (!$('game').hidden) layout(); }, 300); });
+})();
+</script>
+</body>
+</html>
