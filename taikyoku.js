@@ -118,7 +118,16 @@ const _render2=render;render=function(){_render2();const h=PLAY.hint;if(h&&PLAY.
 $('.nav').insertAdjacentHTML('beforeend','<button id="bPlay" aria-label="AIと対局">⚔️</button>');
 $('.nav').insertAdjacentHTML('afterend','<div id="playbar" class="playbar hidden"></div>');
 $('#bPlay').onclick=()=>openPlay();
-function paintBar(){const el=$('#playbar');setTimeout(()=>{const on=PLAY.on&&!el.classList.contains('hidden');document.body.classList.toggle('playing',on);if(on)document.documentElement.style.setProperty('--pbh',el.offsetHeight+'px');},0);if(!PLAY.on&&!PLAY.result){el.classList.add('hidden');return;}el.classList.toggle('hidden',!PLAY.on);if(!PLAY.on)return;
+// 盤の高さ = 画面の高さ − (ヘッダ・持ち駒・筋の数字・操作バー・フッタ) を実測して決める
+function fitBoard(){if(!document.body.classList.contains('playing'))return;const hh=s=>{const e=document.querySelector(s);if(!e)return 0;const cs=getComputedStyle(e);return e.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);};
+ const used=hh('header')+hh('#hand1')+hh('#hand0')+hh('#files')+hh('#playbar')+hh('footer')+10,avail=innerHeight-used,wb=(innerWidth-38)*1.09;
+ let bh=Math.max(200,Math.min(wb,avail,540));document.body.style.setProperty('--bh',bh+'px');
+ const pb=$('#playbar').getBoundingClientRect(),over=$('#hand0').getBoundingClientRect().bottom+3-pb.top;if(over>0){bh=Math.max(200,bh-over);document.body.style.setProperty('--bh',bh+'px');}
+ // キャラ: 持ち駒（下）と操作バーの間に空きがあればそこへ、なければ隠す
+ const ch=$('#chara'),gap=pb.top-$('#hand0').getBoundingClientRect().bottom;
+ if(gap>=50){ch.style.cssText=`display:flex;top:auto;bottom:${innerHeight-pb.top+6}px;right:12px;transform:scale(${Math.min(.75,(gap-4)/52)});transform-origin:100% 100%`;ch.classList.add('pfit');}else{ch.style.cssText='';ch.classList.remove('pfit');}}
+addEventListener('resize',()=>setTimeout(fitBoard,50));
+function paintBar(){const el=$('#playbar');setTimeout(()=>{const on=PLAY.on&&!el.classList.contains('hidden');document.body.classList.toggle('playing',on);if(!on){document.body.style.removeProperty('--bh');$('#chara').style.cssText='';$('#chara').classList.remove('pfit');}if(on){document.documentElement.style.setProperty('--pbh',el.offsetHeight+'px');fitBoard();}},0);if(!PLAY.on&&!PLAY.result){el.classList.add('hidden');return;}el.classList.toggle('hidden',!PLAY.on);if(!PLAY.on)return;
  const e=eng(),ho=game.handicap!=='平手',nm=o=>o===e?`🤖 ${lvName(PLAY.opt.level)}`:'🙂 あなた',mk=o=>o?'△':'▲';
  const st_=PLAY.result?'終局':PLAY.thinking?'<span class="spin"></span> やねうら王が考え中…':PLAY.await?`盤で「${PLAY.awaitTxt}」を指してください`:pos().turn===e?'やねうら王の番':'あなたの番です';
  el.innerHTML=`<div class="prow"><span>${mk(1)} ${nm(1)}</span>${PLAY.clock?'<b class="pclk" id="pc1"></b>':''}</div><div class="prow"><span>${mk(0)} ${nm(0)}</span>${PLAY.clock?'<b class="pclk" id="pc0"></b>':''}</div>

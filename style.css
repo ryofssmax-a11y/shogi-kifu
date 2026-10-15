@@ -95,3 +95,16 @@ body.playing .playbar .prow{padding:0;font-size:13px}body.playing .playbar .pst{
 body.playing .playbar .row button{min-height:44px}
 body.playing .chara{bottom:calc(80px + var(--pbh,150px) + env(safe-area-inset-bottom));transform:scale(.6);transform-origin:100% 100%}
 body.playing .chara .bubble{font-size:15px}
+/* 対局中: 盤・両方の持ち駒・操作バーを1画面に収める */
+body.playing{padding-bottom:0}
+body.playing header{padding:4px 10px}body.playing header .ic{width:38px;height:38px;min-height:38px}
+body.playing #status,body.playing .nav,body.playing #moves{display:none}
+body.playing .hand{min-height:34px;padding:2px 6px;margin:3px auto}body.playing .hand .hp{height:30px;min-width:34px;font-size:16px}
+body.playing{--bh:min(calc((100vw - 38px) * 1.09),calc(100dvh - 46px - 86px - 18px - var(--pbh,150px) - 73px - env(safe-area-inset-bottom) - 8px),540px)}
+body.playing .boardwrap,body.playing .hand{width:calc(var(--bh) / 1.09 + 26px);max-width:100%;box-sizing:border-box;margin-left:auto;margin-right:auto}
+body.playing #board{height:var(--bh);max-height:none}
+body.playing .chara{display:none}
+body.playing .chara.pfit .bubble{right:100%;bottom:10px}
+body.playing .ranks{height:var(--bh);max-height:none}
+body.playing .boardwrap,body.playing .hand{width:calc(var(--bh) / 1.09 + 22px)}
+body.playing .cell{font-size:calc(var(--bh) / 9 * .56)}
