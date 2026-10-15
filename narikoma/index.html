@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>成り駒おとし</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+/* 初代iPad mini (iOS 9 Safari) 対応のため、CSS変数は使わず色を直書きしている（盤の描画色はJS側の既定値を使う） */
+html,body{margin:0;}
+[hidden]{display:none!important;}
+
+/* Layout: 盤（6列×12段）が主役。広い画面は右に「次の駒・得点」、狭い画面は上に横並び。下に大きな操作ボタン。Old-Safari safe (no gap, no grid). */
+html, body { height: 100%; }
+body {
+  background: #e6e9e1; background: #e6e9e1;
+  color: #1f1c17; color: #1f1c17;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+#app {
+  max-width: 760px; margin: 0 auto;
+  padding-top: 10px; padding-bottom: 16px;
+  padding-left: 16px; padding-right: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top { display: -webkit-flex; display: flex; -webkit-align-items: baseline; align-items: baseline; -webkit-justify-content: space-between; justify-content: space-between; border-bottom: 2px solid #1f1c17; padding-bottom: 6px; margin-bottom: 10px; }
+.brand { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-weight: 700; font-size: 24px; letter-spacing: .12em; margin: 0; }
+.brand b { color: #b3332a; }
+.tag { font-size: 12px; color: #6b6a60; letter-spacing: .06em; }
+
+.stage { display: -webkit-flex; display: flex; -webkit-justify-content: center; justify-content: center; -webkit-align-items: flex-start; align-items: flex-start; }
+.stage.narrow { -webkit-flex-direction: column-reverse; flex-direction: column-reverse; -webkit-align-items: center; align-items: center; }
+.fieldwrap { position: relative; }
+#field { display: block; border: 2px solid #6b5026; background: #d8b36a; }
+.side { width: 130px; margin-left: 14px; }
+.stage.narrow .side { width: auto; margin: 0 0 8px; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; }
+.stage.narrow .box { margin: 0 14px 0 0; }
+.box { margin-bottom: 14px; }
+.lbl { font-size: 11px; color: #6b6a60; letter-spacing: .12em; margin-bottom: 2px; }
+.num { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.num.small { font-size: 16px; }
+#next { display: block; }
+.ladder { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-size: 14px; line-height: 1.9; color: #6b6a60; }
+.ladder b { color: #1f1c17; }
+.stage.narrow .ladder { display: none; }
+
+.overlay {
+  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(31, 28, 23, .72); color: #f6f1e4;
+  display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column;
+  -webkit-justify-content: center; justify-content: center; -webkit-align-items: center; align-items: center;
+  text-align: center; padding: 16px; box-sizing: border-box;
+}
+.overlay h2 { font-family: "Hiragino Mincho ProN", "HiraMinProN-W6", "Yu Mincho", "Noto Serif JP", serif; font-size: 28px; margin: 0 0 8px; letter-spacing: .14em; }
+.overlay p { margin: 0 0 14px; font-size: 14px; line-height: 1.7; }
+.overlay .big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.btn {
+  border: 1px solid #1f1c17; background: #f4f5f0; color: #1f1c17;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif; font-size: 16px; padding: 10px 18px; border-radius: 4px; cursor: pointer;
+}
+.btn.primary { background: #b3332a; border-color: #b3332a; color: #fff; }
+.btn:focus { outline: 2px solid #b3332a; outline-offset: 1px; }
+
+.pad { display: -webkit-flex; display: flex; -webkit-justify-content: center; justify-content: center; margin-top: 10px; }
+.pad button {
+  -webkit-flex: 1 1 0; flex: 1 1 0; max-width: 110px; height: 60px; margin: 0 3px;
+  border: 1px solid #6b5026; border-bottom-width: 4px; background: #f4f5f0; color: #1f1c17;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif; font-size: 16px; font-weight: 700; border-radius: 6px; padding: 0; cursor: pointer;
+}
+.pad button.on { background: #c9ccc0; border-bottom-width: 1px; margin-top: 3px; height: 57px; }
+.pad .drop { background: #b3332a; border-color: #b3332a; color: #fff; }
+.sub { display: -webkit-flex; display: flex; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; align-items: center; margin-top: 8px; font-size: 12px; color: #6b6a60; }
+.sub button { background: none; border: 1px solid #c9ccc0; color: #1f1c17; border-radius: 4px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.rules { font-size: 12px; color: #6b6a60; line-height: 1.7; margin-top: 10px; border-top: 1px solid #c9ccc0; padding-top: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <h1 class="brand">成り駒<b>おとし</b></h1>
+    <span class="tag">同じ駒3つで出世する落ちものパズル</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="fieldwrap" id="fieldwrap">
+      <canvas id="field"></canvas>
+      <div class="overlay" id="startOv">
+        <h2>成り駒おとし</h2>
+        <p>同じ駒を縦横に3つ以上つなげると<br>消えて一つ上の駒に出世します。<br>歩→香→桂→銀→金→角→飛→龍</p>
+        <button class="btn primary" id="startBtn" type="button">はじめる</button>
+      </div>
+      <div class="overlay" id="pauseOv" hidden>
+        <h2>一時停止</h2>
+        <button class="btn primary" id="resumeBtn" type="button">つづける</button>
+      </div>
+      <div class="overlay" id="overOv" hidden>
+        <h2>投了</h2>
+        <p>得点</p>
+        <div class="big" id="overScore">0</div>
+        <p id="overNote"></p>
+        <button class="btn primary" id="againBtn" type="button">もう一局</button>
+      </div>
+    </div>
+    <div class="side">
+      <div class="box">
+        <div class="lbl">次の駒</div>
+        <canvas id="next"></canvas>
+      </div>
+      <div class="box">
+        <div class="lbl">得点</div>
+        <div class="num" id="score">0</div>
+      </div>
+      <div class="box">
+        <div class="lbl">段位</div>
+        <div class="num small" id="level">1段</div>
+      </div>
+      <div class="box">
+        <div class="lbl">最高得点</div>
+        <div class="num small" id="best">0</div>
+      </div>
+      <div class="box ladder" id="ladder"></div>
+    </div>
+  </div>
+
+  <div class="pad" id="pad">
+    <button type="button" data-a="left">左</button>
+    <button type="button" data-a="rotl">左回転</button>
+    <button type="button" data-a="rotr">右回転</button>
+    <button type="button" data-a="right">右</button>
+    <button type="button" data-a="soft">下</button>
+    <button type="button" data-a="hard" class="drop">落とす</button>
+  </div>
+  <div class="sub">
+    <span>盤をタップしても回転します。キーボード：←→移動 ↑/X回転 Z逆回転 ↓加速 スペース落とす</span>
+    <button type="button" id="pauseBtn">一時停止</button>
+  </div>
+  <div class="rules">二つ一組の駒が落ちてきます。着地すると駒はバラバラに下まで落ちます。同じ駒が縦横に3つ以上つながると消え、最後に置いた駒の場所に一つ上の駒が生まれます。生まれた駒でさらにそろうと連鎖になり、得点が倍増します。龍を3つそろえると盤から消えて大量得点。上の赤い印のマスがふさがると投了です。</div>
+</div>
+
+<script>
+(function () {
+  var COLS = 6, ROWS = 12;
+  var NAMES = ['歩', '香', '桂', '銀', '金', '角', '飛', '龍'];
+  var VAL = [1, 2, 4, 8, 15, 30, 60, 120];
+  var BAND = ['#c9a86a', '#7f9a5b', '#5c8a8a', '#7a8aa8', '#c49a2c', '#8a5ca0', '#3f6aa8', '#b3332a'];
+  var MULT = [1, 2, 4, 6, 8, 12, 16, 24];
+  var DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1];
+  var $ = function (id) { return document.getElementById(id); };
+  var field = $('field'), fctx = field.getContext('2d');
+  var nextC = $('next'), nctx = nextC.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var cell = 44, ncell = 30;
+  var C = {};
+
+  function cssVar(name, fb) {
+    var v = '';
+    try { v = window.getComputedStyle(document.documentElement).getPropertyValue(name); } catch (e) {}
+    v = (v || '').replace(/^\s+|\s+$/g, '');
+    return v || fb;
+  }
+  function readColors() {
+    C.board = cssVar('--board', '#d8b36a');
+    C.grid = cssVar('--grid', '#6b5026');
+    C.piece = cssVar('--piece', '#f6e4b8');
+    C.edge = cssVar('--piece-edge', '#8c6a33');
+    C.accent = cssVar('--accent', '#b3332a');
+    C.surface = cssVar('--surface', '#f4f5f0');
+    C.font = cssVar('--font-piece', '"Hiragino Mincho ProN", serif');
+  }
+
+  var grid, stamp, stampN, cur, next1, next2, score, best = 0, level, chainN, maxRank;
+  var state = 'title', fallT = 0, lockT = 0, waitUntil = 0, flashCells = null, soft = false, msgs = [];
+  try { best = +(localStorage.getItem('narikoma-best') || 0) || 0; } catch (e) {}
+
+  function now() { return Date.now(); }
+  function newGrid() {
+    grid = []; stamp = [];
+    for (var r = 0; r < ROWS; r++) {
+      var a = [], b = [];
+      for (var c = 0; c < COLS; c++) { a.push(-1); b.push(0); }
+      grid.push(a); stamp.push(b);
+    }
+    stampN = 0;
+  }
+  function randPiece() {
+    var x = Math.random();
+    if (level >= 4 && x < 0.08) return 3;
+    x = Math.random();
+    return x < 0.48 ? 0 : (x < 0.8 ? 1 : 2);
+  }
+  function newPair() { return { a: randPiece(), b: randPiece() }; }
+  function cellsOf(p) {
+    return [{ r: p.r, c: p.c, k: p.a }, { r: p.r + DR[p.o], c: p.c + DC[p.o], k: p.b }];
+  }
+  function free(r, c) {
+    if (c < 0 || c >= COLS || r >= ROWS) return false;
+    if (r < 0) return true;
+    return grid[r][c] < 0;
+  }
+  function fits(p) {
+    var cs = cellsOf(p);
+    return free(cs[0].r, cs[0].c) && free(cs[1].r, cs[1].c);
+  }
+  function copy(p) { return { r: p.r, c: p.c, o: p.o, a: p.a, b: p.b }; }
+  function interval() { return Math.max(110, 760 - (level - 1) * 65); }
+
+  function startGame() {
+    newGrid(); score = 0; level = 1; chainN = 0; maxRank = 0; msgs = [];
+    next1 = newPair(); next2 = newPair();
+    $('startOv').hidden = true; $('overOv').hidden = true; $('pauseOv').hidden = true;
+    updateHud(); spawn();
+  }
+  function spawn() {
+    cur = { r: 0, c: 2, o: 0, a: next1.a, b: next1.b };
+    next1 = next2; next2 = newPair();
+    drawNext();
+    if (grid[0][2] >= 0 || !fits(cur)) { gameOver(); return; }
+    state = 'fall'; fallT = now(); lockT = 0;
+  }
+  function gameOver() {
+    state = 'over'; cur = null;
+    if (score > best) { best = score; try { localStorage.setItem('narikoma-best', String(best)); } catch (e) {} }
+    $('overScore').innerHTML = score;
+    $('overNote').innerHTML = '最高位：' + NAMES[maxRank] + (score >= best && score > 0 ? '　最高得点です' : '');
+    $('overOv').hidden = false; updateHud();
+  }
+
+  /* ---------- controls ---------- */
+  function act(a) {
+    if (state !== 'fall' || !cur) return;
+    var p;
+    if (a === 'left' || a === 'right') {
+      p = copy(cur); p.c += a === 'left' ? -1 : 1;
+      if (fits(p)) { cur = p; if (lockT) lockT = now(); }
+    } else if (a === 'rotl' || a === 'rotr') {
+      p = copy(cur); p.o = (p.o + (a === 'rotr' ? 1 : 3)) % 4;
+      if (!fits(p)) {
+        var k = copy(p);
+        if (p.o === 1) k.c -= 1; else if (p.o === 3) k.c += 1; else if (p.o === 2) k.r -= 1;
+        if (fits(k)) p = k;
+        else { p = copy(cur); p.o = (p.o + 2) % 4; if (!fits(p)) { p = copy(cur); var t = p.a; p.a = p.b; p.b = t; } }
+      }
+      if (fits(p)) { cur = p; if (lockT) lockT = now(); }
+    } else if (a === 'hard') {
+      p = copy(cur);
+      while (true) { var d = copy(p); d.r++; if (!fits(d)) break; p = d; }
+      cur = p; lock();
+    }
+  }
+  function lock() {
+    var cs = cellsOf(cur);
+    cs.sort(function (x, y) { return y.r - x.r; });
+    cur = null;
+    for (var i = 0; i < cs.length; i++) {
+      var c = cs[i].c, r = ROWS - 1;
+      while (r >= 0 && grid[r][c] >= 0) r--;
+      if (r < 0) { gameOver(); return; }
+      grid[r][c] = cs[i].k; stamp[r][c] = ++stampN;
+    }
+    chainN = 0; resolve();
+  }
+  function groups() {
+    var seen = [], out = [], r, c;
+    for (r = 0; r < ROWS; r++) { seen.push([]); for (c = 0; c < COLS; c++) seen[r].push(false); }
+    for (r = 0; r < ROWS; r++) for (c = 0; c < COLS; c++) {
+      if (grid[r][c] < 0 || seen[r][c]) continue;
+      var k = grid[r][c], st = [[r, c]], g = [];
+      seen[r][c] = true;
+      while (st.length) {
+        var x = st.pop(); g.push(x);
+        for (var d = 0; d < 4; d++) {
+          var rr = x[0] + DR[d], cc = x[1] + DC[d];
+          if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS || seen[rr][cc] || grid[rr][cc] !== k) continue;
+          seen[rr][cc] = true; st.push([rr, cc]);
+        }
+      }
+      if (g.length >= 3) out.push(g);
+    }
+    return out;
+  }
+  function resolve() {
+    var gs = groups();
+    if (!gs.length) {
+      if (chainN >= 2) addMsg(chainN + '連鎖！', C.accent);
+      updateHud(); spawn(); return;
+    }
+    chainN++;
+    flashCells = gs; state = 'flash'; waitUntil = now() + 300;
+  }
+  function applyMerge() {
+    var gs = flashCells, mult = MULT[Math.min(chainN - 1, MULT.length - 1)];
+    flashCells = null;
+    for (var i = 0; i < gs.length; i++) {
+      var g = gs[i], k = grid[g[0][0]][g[0][1]], best1 = g[0];
+      for (var j = 0; j < g.length; j++) {
+        if (stamp[g[j][0]][g[j][1]] > stamp[best1[0]][best1[1]]) best1 = g[j];
+      }
+      for (j = 0; j < g.length; j++) { grid[g[j][0]][g[j][1]] = -1; stamp[g[j][0]][g[j][1]] = 0; }
+      score += VAL[k] * g.length * 10 * mult;
+      if (k < NAMES.length - 1) {
+        grid[best1[0]][best1[1]] = k + 1; stamp[best1[0]][best1[1]] = ++stampN;
+        if (k + 1 > maxRank) maxRank = k + 1;
+        if (k + 1 >= 3) addMsg(NAMES[k + 1] + 'に成った', '#fff');
+      } else {
+        score += 5000 * mult;
+        addMsg('龍王降臨 +' + (5000 * mult), C.accent);
+      }
+    }
+    level = 1 + Math.floor(score / 2000);
+    if (level > 12) level = 12;
+    gravity(); updateHud();
+    state = 'settle'; waitUntil = now() + 170;
+  }
+  function gravity() {
+    for (var c = 0; c < COLS; c++) {
+      var w = ROWS - 1;
+      for (var r = ROWS - 1; r >= 0; r--) {
+        if (grid[r][c] >= 0) {
+          if (w !== r) { grid[w][c] = grid[r][c]; stamp[w][c] = stamp[r][c]; grid[r][c] = -1; stamp[r][c] = 0; }
+          w--;
+        }
+      }
+    }
+  }
+  function addMsg(t, col) { msgs.push({ t: t, col: col, until: now() + 1100 }); if (msgs.length > 3) msgs.shift(); }
+  function updateHud() {
+    $('score').innerHTML = score || 0;
+    $('level').innerHTML = (level || 1) + '段';
+    $('best').innerHTML = Math.max(best, score || 0);
+    var h = '';
+    for (var i = 0; i < NAMES.length; i++) h += (i <= maxRank ? '<b>' + NAMES[i] + '</b>' : NAMES[i]) + (i < NAMES.length - 1 ? ' → ' : '');
+    $('ladder').innerHTML = h;
+  }
+
+  /* ---------- drawing ---------- */
+  function piece(ctx, x, y, s, k, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.5, y + s * 0.07);
+    ctx.lineTo(x + s * 0.85, y + s * 0.2);
+    ctx.lineTo(x + s * 0.93, y + s * 0.93);
+    ctx.lineTo(x + s * 0.07, y + s * 0.93);
+    ctx.lineTo(x + s * 0.15, y + s * 0.2);
+    ctx.closePath();
+    ctx.fillStyle = C.piece; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = C.edge; ctx.stroke();
+    ctx.fillStyle = BAND[k];
+    ctx.fillRect(x + s * 0.09, y + s * 0.83, s * 0.82, s * 0.1);
+    ctx.fillStyle = k === 7 ? '#b3332a' : '#1f1c17';
+    ctx.font = 'bold ' + Math.round(s * 0.5) + 'px ' + C.font;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(NAMES[k], x + s * 0.5, y + s * 0.53);
+    ctx.restore();
+  }
+  function drawField() {
+    var w = COLS * cell, h = ROWS * cell, t = now(), r, c;
+    fctx.fillStyle = C.board; fctx.fillRect(0, 0, w, h);
+    fctx.strokeStyle = C.grid; fctx.globalAlpha = 0.45; fctx.lineWidth = 1;
+    fctx.beginPath();
+    for (c = 1; c < COLS; c++) { fctx.moveTo(c * cell + 0.5, 0); fctx.lineTo(c * cell + 0.5, h); }
+    for (r = 1; r < ROWS; r++) { fctx.moveTo(0, r * cell + 0.5); fctx.lineTo(w, r * cell + 0.5); }
+    fctx.stroke(); fctx.globalAlpha = 1;
+    // danger mark
+    fctx.strokeStyle = C.accent; fctx.lineWidth = 2; fctx.globalAlpha = 0.6;
+    fctx.beginPath();
+    fctx.moveTo(2 * cell + cell * 0.3, cell * 0.3); fctx.lineTo(2 * cell + cell * 0.7, cell * 0.7);
+    fctx.moveTo(2 * cell + cell * 0.7, cell * 0.3); fctx.lineTo(2 * cell + cell * 0.3, cell * 0.7);
+    fctx.stroke(); fctx.globalAlpha = 1;
+    var flash = {};
+    if (flashCells) for (var i = 0; i < flashCells.length; i++) for (var j = 0; j < flashCells[i].length; j++) flash[flashCells[i][j][0] * COLS + flashCells[i][j][1]] = 1;
+    for (r = 0; r < ROWS; r++) for (c = 0; c < COLS; c++) {
+      if (grid && grid[r][c] >= 0) {
+        var fl = flash[r * COLS + c];
+        piece(fctx, c * cell, r * cell, cell, grid[r][c], fl ? (0.35 + 0.65 * Math.abs(Math.sin(t / 45))) : 1);
+      }
+    }
+    if (cur && state === 'fall') {
+      // landing shadow
+      var g = copy(cur);
+      while (true) { var d = copy(g); d.r++; if (!fits(d)) break; g = d; }
+      var gs = cellsOf(g);
+      for (i = 0; i < 2; i++) if (gs[i].r >= 0) piece(fctx, gs[i].c * cell, gs[i].r * cell, cell, gs[i].k, 0.22);
+      var cs = cellsOf(cur);
+      for (i = 0; i < 2; i++) if (cs[i].r >= 0) piece(fctx, cs[i].c * cell, cs[i].r * cell, cell, cs[i].k, 1);
+    }
+    // messages
+    var y = h * 0.38;
+    for (i = 0; i < msgs.length; i++) {
+      var m = msgs[i];
+      if (m.until < t) continue;
+      var a = Math.min(1, (m.until - t) / 400);
+      fctx.save(); fctx.globalAlpha = a;
+      fctx.font = 'bold ' + Math.round(cell * 0.6) + 'px ' + C.font;
+      fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
+      fctx.lineWidth = 4; fctx.strokeStyle = 'rgba(31,28,23,.85)';
+      fctx.strokeText(m.t, w / 2, y); fctx.fillStyle = m.col; fctx.fillText(m.t, w / 2, y);
+      fctx.restore();
+      y += cell * 0.8;
+    }
+  }
+  function drawNext() {
+    var w = ncell * 3.4, h = ncell * 2;
+    nctx.clearRect(0, 0, w, h);
+    if (!next1) return;
+    piece(nctx, 0, ncell, ncell, next1.a);
+    piece(nctx, 0, 0, ncell, next1.b);
+    piece(nctx, ncell * 1.9, ncell + ncell * 0.25, ncell * 0.75, next2.a, 0.7);
+    piece(nctx, ncell * 1.9, ncell * 0.4, ncell * 0.75, next2.b, 0.7);
+  }
+
+  /* ---------- loop ---------- */
+  var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || function (f) { return setTimeout(f, 16); };
+  function loop() {
+    var t = now();
+    if (state === 'fall' && cur) {
+      var iv = soft ? 35 : interval();
+      if (t - fallT >= iv) {
+        fallT = t;
+        var d = copy(cur); d.r++;
+        if (fits(d)) { cur = d; lockT = 0; if (soft) score += 1; }
+        else if (!lockT) lockT = t;
+      }
+      if (lockT && t - lockT >= (soft ? 80 : 320)) {
+        var d2 = copy(cur); d2.r++;
+        if (fits(d2)) lockT = 0; else lock();
+      }
+    } else if (state === 'flash' && t >= waitUntil) {
+      applyMerge();
+    } else if (state === 'settle' && t >= waitUntil) {
+      resolve();
+    }
+    drawField();
+    raf(loop);
+  }
+
+  /* ---------- layout ---------- */
+  function layout() {
+    var W = document.documentElement.clientWidth, H = window.innerHeight;
+    var wide = W >= 560;
+    $('stage').className = 'stage' + (wide ? '' : ' narrow');
+    var byW = Math.floor((W - 36 - (wide ? 150 : 0)) / COLS);
+    var byH = Math.floor((H - (wide ? 200 : 250)) / ROWS);
+    cell = Math.max(24, Math.min(58, byW, byH));
+    var w = COLS * cell, h = ROWS * cell;
+    field.width = w * dpr; field.height = h * dpr;
+    field.style.width = w + 'px'; field.style.height = h + 'px';
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ncell = wide ? 34 : 26;
+    nextC.width = ncell * 3.4 * dpr; nextC.height = ncell * 2 * dpr;
+    nextC.style.width = ncell * 3.4 + 'px'; nextC.style.height = ncell * 2 + 'px';
+    nctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    readColors(); drawNext();
+  }
+
+  /* ---------- input wiring ---------- */
+  var repeatT = null, touched = false;
+  function stopRepeat() { if (repeatT) { clearTimeout(repeatT); repeatT = null; } soft = false; }
+  function press(btn) {
+    var a = btn.getAttribute('data-a');
+    btn.className = btn.className.replace(' on', '') + ' on';
+    if (a === 'soft') { soft = true; return; }
+    act(a);
+    if (a === 'left' || a === 'right') {
+      var rep = function () { act(a); repeatT = setTimeout(rep, 75); };
+      repeatT = setTimeout(rep, 220);
+    }
+  }
+  function release(btn) { btn.className = btn.className.replace(' on', ''); stopRepeat(); }
+  var btns = $('pad').getElementsByTagName('button');
+  for (var i = 0; i < btns.length; i++) {
+    (function (b) {
+      b.addEventListener('touchstart', function (e) { e.preventDefault(); touched = true; press(b); }, false);
+      b.addEventListener('touchend', function (e) { e.preventDefault(); release(b); }, false);
+      b.addEventListener('touchcancel', function () { release(b); }, false);
+      b.addEventListener('mousedown', function (e) { if (touched) return; e.preventDefault(); press(b); }, false);
+      b.addEventListener('mouseup', function () { if (touched) return; release(b); }, false);
+      b.addEventListener('mouseleave', function () { if (touched) return; release(b); }, false);
+    })(btns[i]);
+  }
+  field.addEventListener('touchstart', function (e) { e.preventDefault(); touched = true; act('rotr'); }, false);
+  field.addEventListener('mousedown', function () { if (!touched) act('rotr'); }, false);
+  document.addEventListener('keydown', function (e) {
+    var k = e.keyCode;
+    if (state === 'title' && (k === 13 || k === 32)) { e.preventDefault(); startGame(); return; }
+    if (k === 37) act('left');
+    else if (k === 39) act('right');
+    else if (k === 38 || k === 88) act('rotr');
+    else if (k === 90) act('rotl');
+    else if (k === 40) soft = true;
+    else if (k === 32) act('hard');
+    else if (k === 80 || k === 27) togglePause();
+    else return;
+    e.preventDefault();
+  }, false);
+  document.addEventListener('keyup', function (e) { if (e.keyCode === 40) soft = false; }, false);
+
+  var pausedFrom = null;
+  function togglePause() {
+    if (state === 'pause') {
+      state = pausedFrom; pausedFrom = null; $('pauseOv').hidden = true;
+      fallT = now(); if (lockT) lockT = now(); waitUntil = now() + 150;
+    } else if (state === 'fall' || state === 'flash' || state === 'settle') {
+      pausedFrom = state; state = 'pause'; $('pauseOv').hidden = false;
+    }
+  }
+  $('pauseBtn').onclick = togglePause;
+  $('resumeBtn').onclick = togglePause;
+  $('startBtn').onclick = startGame;
+  $('againBtn').onclick = startGame;
+  document.addEventListener('visibilitychange', function () { if (document.hidden && state !== 'pause') togglePause(); }, false);
+
+  var rt = null;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(layout, 120); }, false);
+  window.addEventListener('orientationchange', function () { setTimeout(layout, 300); }, false);
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addListener) mq.addListener(function () { readColors(); drawNext(); });
+  }
+  if (window.MutationObserver) new MutationObserver(function () { readColors(); drawNext(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  newGrid(); level = 1; score = 0; maxRank = 0;
+  // 見本の盤面（タイトル画面用）
+  var sample = [[11, 0, 0], [11, 1, 1], [11, 2, 0], [11, 3, 2], [11, 4, 1], [11, 5, 1], [10, 0, 1], [10, 1, 2], [10, 3, 3], [10, 5, 0], [9, 0, 2], [9, 5, 2]];
+  for (i = 0; i < sample.length; i++) grid[sample[i][0]][sample[i][1]] = sample[i][2];
+  next1 = newPair(); next2 = newPair();
+  layout(); updateHud(); loop();
+})();
+</script>
+</body>
+</html>
