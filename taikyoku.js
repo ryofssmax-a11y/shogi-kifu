@@ -1,3 +1,4 @@
+const aiView=()=>(st.ai&&st.ai.view)||'all';
 // ===== 対局モード（やねうら王＋つようら王11mini と指す） =====
 // 強さの調整（PLAY.md に詳しく）: 低いレベルほど 探索ノード数を絞り、MultiPV で複数の候補手を読ませ、
 // 最善手からの評価値の損（cp）が「許容量」以内の手から、損が小さいほど選ばれやすい重み exp(-損/温度) でランダムに選ぶ。
@@ -75,7 +76,7 @@ async function engineTurn(){const gen=++PLAY.gen,lv=PLAY.opt.level,ply=game.move
  if(canDeclare(p,eng())){finish({winner:eng(),reason:'入玉宣言'});return;}
  PLAY.thinking=true;paintBar();$('#chara').classList.add('think');say('うーん、考え中…');
  const info=await think(lv,ply);if(gen!==PLAY.gen||!PLAY.on||PLAY.result)return;
- const ch=pickMove(info,p,lv);const bestInf=info[1];
+ const ch=pickMove(info,p,lv);if(window.EB)EB.put(p,info[1]);const bestInf=info[1];
  // 投了: 自分から見て評価値が閾値より悪い状態が2手続いたら（または詰まされる読み筋）
  const myV=bestInf?(bestInf.mate!=null?(bestInf.mate>0?30000:-30000):bestInf.cp):0;PLAY.lastEval=myV;
  if(PLAY.opt.resign&&(myV<=-PLAY.opt.resign||(bestInf&&bestInf.mate!=null&&bestInf.mate<0&&-bestInf.mate<=5))){PLAY.lowCount++;if(PLAY.lowCount>=2||(bestInf.mate!=null&&bestInf.mate<0)){PLAY.thinking=false;$('#chara').classList.remove('think');finish({winner:1-eng(),reason:'投了'});return;}}else PLAY.lowCount=0;
@@ -85,13 +86,13 @@ async function engineTurn(){const gen=++PLAY.gen,lv=PLAY.opt.level,ply=game.move
  const mood=myV>1500?'ピンチかも…がんばって！':myV>600?'ちょっと苦しいかな？':myV<-1500?'いい感じ！このまま押し切ろう':myV<-600?'優勢だよ！':'';
  if(PLAY.opt.camera){PLAY.await=ch.m;PLAY.awaitTxt=txt;paintBar();say(`やねうら王: ${txt}。実際の盤で指してね`,true);speak([txt]);showAwait();return;}
  PLAY.engineMoving=true;try{await _commit(ch.m);}finally{PLAY.engineMoving=false;}
- if(PLAY.opt.voice)speak([txt]);if(mood)setTimeout(()=>say(mood,true),900);afterMove(true);}
+ if(PLAY.opt.voice)speak([txt]);if(mood&&aiView()==='all')setTimeout(()=>say(mood,true),900);afterMove(true);}
 function showAwait(){const sb=$('#shBody');if(!sb||!$('#avid'))return;let el=$('#playAwait');if(!el){sb.insertAdjacentHTML('afterbegin','<div id="playAwait" class="pawait"></div>');el=$('#playAwait');}
  el.innerHTML=PLAY.await?`<b>やねうら王の手: ${PLAY.awaitTxt}</b><br><small>実際の盤でこの手を指してください。検出すると記録して、あなたの番になります。</small><div class="row"><button id="paDone">指した（手動で確定）</button></div>`:(PLAY.result?'':'<small>あなたの番です。盤で指してください。</small>');
  const b=$('#paDone');if(b)b.onclick=()=>commit(PLAY.await);}
 // カメラ対局中は、やねうら王の手を待つ間だけ候補をその手に絞る（検出を確実にする）
 const _legalNow=legalNow;legalNow=function(){const l=_legalNow();if(PLAY.on&&PLAY.await&&window.AUTO&&AUTO.on)return l.filter(m=>sameMove(m,PLAY.await));return l;};
-function finish(r){if(PLAY.result)return;PLAY.gen++;stopSearch();PLAY.thinking=false;PLAY.await=null;$('#chara').classList.remove('think');
+function finish(r){if(PLAY.result)return;if(window.EB)EB.toAnalysis();PLAY.gen++;stopSearch();PLAY.thinking=false;PLAY.await=null;$('#chara').classList.remove('think');
  if(PLAY.clock)PLAY.clock.side=null;PLAY.result=r;game.result=r;save();
  const ho=game.handicap!=='平手',hum=PLAY.opt.mode==='human',you=hum?-9:1-eng(),pn=o=>(o?(ho?'△上手 ':'△後手 '):(ho?'▲下手 ':'▲先手 '))+(o?game.white:game.black),txt=r.winner==null?'千日手（引き分け）':hum?pn(r.winner)+' の勝ち':(r.winner===you?'あなたの勝ち':'やねうら王の勝ち');
  const why={'詰み':'詰み','投了':hum?pn(1-r.winner)+' が投了':r.winner===you?'やねうら王が投了':'あなたが投了','千日手':'同一局面4回','連続王手':'連続王手の千日手','入玉宣言':'入玉宣言','切れ負け':'時間切れ'}[r.reason];
@@ -123,7 +124,7 @@ $('.nav').insertAdjacentHTML('afterend','<div id="playbar" class="playbar hidden
 $('#bPlay').onclick=()=>openPlay();
 // 盤の高さ = 画面の高さ − (ヘッダ・持ち駒・筋の数字・操作バー・フッタ) を実測して決める
 function fitBoard(){if(!document.body.classList.contains('playing'))return;const hh=s=>{const e=document.querySelector(s);if(!e)return 0;const cs=getComputedStyle(e);return e.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);};
- const used=hh('header')+hh('#playtop')+hh('#hand1')+hh('#hand0')+hh('#files')+hh('#playbar')+hh('footer')+10,avail=innerHeight-used,wb=(innerWidth-38)*1.09;
+ const used=hh('header')+hh('#playtop')+hh('#evbarH')+hh('#hand1')+hh('#hand0')+hh('#files')+hh('#playbar')+hh('footer')+10,avail=innerHeight-used,wb=(innerWidth-38-(window.EB?EB.vw():0))*1.09;
  let bh=Math.max(200,Math.min(wb,avail,540));document.body.style.setProperty('--bh',bh+'px');
  const pb=$('#playbar').getBoundingClientRect(),over=$('#hand0').getBoundingClientRect().bottom+3-pb.top;if(over>0){bh=Math.max(200,bh-over);document.body.style.setProperty('--bh',bh+'px');}
  // キャラ: 持ち駒（下）と操作バーの間に空きがあればそこへ、なければ隠す

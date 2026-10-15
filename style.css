@@ -17,8 +17,8 @@ main{padding:0 8px}
 #hand1 .hp.gh span{display:inline-block;transform:rotate(180deg)}
 .boardwrap{position:relative}
 .files{display:grid;grid-template-columns:repeat(9,1fr);margin-right:18px;font-size:11px;color:var(--sub);text-align:center}
-.bw2{display:flex}.ranks{width:18px;display:grid;grid-template-rows:repeat(9,minmax(0,1fr));height:calc((100vw - 38px) * 1.09);max-height:540px;font-size:11px;color:var(--sub);align-items:center;text-align:center}
-#board{flex:1;display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,minmax(0,1fr));height:calc((100vw - 38px) * 1.09);max-height:540px;background:var(--wood);border:2px solid var(--line);}
+.bw2{display:flex}.ranks{width:18px;display:grid;grid-template-rows:repeat(9,minmax(0,1fr));height:calc((100vw - 38px - var(--evw,0px)) * 1.09);max-height:540px;font-size:11px;color:var(--sub);align-items:center;text-align:center}
+#board{flex:1;display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,minmax(0,1fr));height:calc((100vw - 38px - var(--evw,0px)) * 1.09);max-height:540px;background:var(--wood);border:2px solid var(--line);}
 .cell{min-height:0;overflow:hidden;border:.5px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;font-weight:700;font-size:min(5.6vw,27px);color:#1a1a1a;user-select:none}
 .cell.g span{transform:rotate(180deg)}.cell span{display:inline-block}
 .cell.pr span{color:#c2181f}
@@ -100,7 +100,7 @@ body.playing{padding-bottom:0}
 body.playing header{padding:4px 10px}body.playing header .ic{width:38px;height:38px;min-height:38px}
 body.playing #status,body.playing .nav,body.playing #moves{display:none}
 body.playing .hand{min-height:34px;padding:2px 6px;margin:3px auto}body.playing .hand .hp{height:30px;min-width:34px;font-size:16px}
-body.playing{--bh:min(calc((100vw - 38px) * 1.09),calc(100dvh - 46px - 86px - 18px - var(--pbh,150px) - 73px - env(safe-area-inset-bottom) - 8px),540px)}
+body.playing{--bh:min(calc((100vw - 38px - var(--evw,0px)) * 1.09),calc(100dvh - 46px - 86px - 18px - var(--pbh,150px) - 73px - env(safe-area-inset-bottom) - 8px),540px)}
 body.playing .boardwrap,body.playing .hand{width:calc(var(--bh) / 1.09 + 26px);max-width:100%;box-sizing:border-box;margin-left:auto;margin-right:auto}
 body.playing #board{height:var(--bh);max-height:none}
 body.playing .chara{display:none}
@@ -118,3 +118,17 @@ body.playing .cell{font-size:calc(var(--bh) / 9 * .56)}
 body.playing .playtop{width:calc(var(--bh) / 1.09 + 22px);max-width:100%}
 .playbar.hu .row,.playtop .row{gap:4px;margin:0}.playbar.hu .sm,.playtop .sm{flex:0 0 auto;min-width:46px;padding:0 6px;min-height:48px}
 .playbar.hu .pclock,.playtop .pclock{min-width:0;padding:4px 8px}.pclock .pnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.evbar{position:relative;background:#3a3a3a;border-radius:6px;overflow:hidden;flex:0 0 auto}
+.evbar i{position:absolute;left:0;bottom:0;background:#f4f1ea;transition:height .6s ease,width .6s ease}
+.evbar.h{height:12px;margin:3px auto}.evbar.h i{top:0;height:100%;width:50%}
+.evbar.v{width:14px;margin:0 3px}.evbar.v i{width:100%;height:50%}
+.evbar::after{content:"";position:absolute;background:#e53935;opacity:.85}
+.evbar.h::after{left:50%;top:0;bottom:0;width:2px;margin-left:-1px}.evbar.v::after{top:50%;left:0;right:0;height:2px;margin-top:-1px}
+.evbar em{display:none;position:absolute;font-style:normal;font-size:10px;font-weight:700;color:#e53935;pointer-events:none}
+.aiv-lbl .evbar em{display:block}.evbar.h em{left:50%;top:-1px;transform:translateX(-50%);line-height:12px;background:rgba(255,255,255,.75);padding:0 3px;border-radius:3px}
+.evbar.v em{left:0;right:0;top:4px;writing-mode:vertical-rl;margin:0 auto;background:rgba(255,255,255,.75);border-radius:3px}
+body.evv-l .files{margin-left:20px}body.evv-r .files{margin-right:38px}
+body.playing .boardwrap,body.playing .hand,body.playing .playtop,body.playing #evbarH{width:calc(var(--bh) / 1.09 + 22px + var(--evw,0px));max-width:100%}
+.aiv-hide #ktEval,.aiv-hide .ktst,.aiv-hide .wr,.aiv-hide #ktLines,.aiv-hide #ktGraph,.aiv-hide #ktMulti,.aiv-hide .mk{display:none!important}
+.aiv{margin-top:8px}.aiv .row{align-items:center}
+.chara.avoid{visibility:hidden}
