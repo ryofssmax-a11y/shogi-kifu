@@ -59,3 +59,16 @@ window.openAIView=openAIView;
 // 対局設定に差し込む
 const _openPlay=openPlay;openPlay=async function(){await _openPlay();const go=$('#poGo');if(go&&!$('#pAiv')){go.insertAdjacentHTML('beforebegin','<div id="pAiv"></div>');$('#pAiv').innerHTML=aiViewHTML('p');bindAIView('p');}};
 $('#bPlay').onclick=()=>openPlay();
+// ===== 大駒を強調（飛・角・龍・馬、玉/王） =====
+const BIGP_DEF={on:true,size:'std',king:true},BIGP_SC={std:1.1,l:1.15,xl:1.2};
+const bigOpt=()=>({...BIGP_DEF,...(st.bigp||{})});
+function applyBig(){const o=bigOpt();document.body.classList.toggle('bigp',o.on);document.body.classList.toggle('bigk',o.on&&o.king);document.body.style.setProperty('--bps',BIGP_SC[o.size]||1.1);
+ if(!o.on)return;const p=pos();document.querySelectorAll('#board .cell').forEach(c=>{const x=p.b[+c.dataset.r][+c.dataset.c];c.classList.toggle('big',!!x&&(x.k==='R'||x.k==='B'));c.classList.toggle('kg',!!x&&x.k==='K');});
+ document.querySelectorAll('.hand .hp').forEach(b=>b.classList.toggle('big',b.dataset.k==='R'||b.dataset.k==='B'));}
+const _render3=render;render=function(){_render3();applyBig();};
+function bigHTML(){const o=bigOpt();return `<div class="aiv"><label class="chk"><input type="checkbox" id="bgOn"${o.on?' checked':''}> 大駒を強調（飛・角・龍・馬を少し大きく太字に）</label>
+ <div class="row"><select id="bgSz">${[['std','標準（+10%）'],['l','大（+15%）'],['xl','特大（+20%）']].map(([v,t])=>`<option value="${v}"${v===o.size?' selected':''}>${t}</option>`).join('')}</select><label class="chk"><input type="checkbox" id="bgK"${o.king?' checked':''}> 玉/王も強調</label></div></div>`;}
+function bindBig(){const u=()=>{st.bigp={on:$('#bgOn').checked,size:$('#bgSz').value,king:$('#bgK').checked};save();render();};['bgOn','bgSz','bgK'].forEach(i=>$('#'+i).onchange=u);}
+const _openAIView=openAIView;openAIView=function(){_openAIView();$('#shBody').insertAdjacentHTML('beforeend','<b>駒の表示</b>'+bigHTML());bindBig();};window.openAIView=openAIView;
+window.openPieceView=()=>{openSheet('駒の表示',bigHTML());bindBig();};
+applyBig();

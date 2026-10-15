@@ -83,7 +83,7 @@ function showGames(){const gs=Object.values(st.games).sort((a,b)=>b.created-a.cr
  <div class="row"><input type="text" id="ngB" placeholder="先手（下手）の名前"><input type="text" id="ngW" placeholder="後手（上手）の名前"></div>
  <button class="pri" id="ngGo" style="width:100%">対局を始める</button><p class="hint">駒落ちは上手（△）から指します。</p>
  <b>保存した対局</b>${gs.map(g=>`<div class="gm"><button data-open="${g.id}">${g.id===st.cur?'▶ ':''}${g.name}<br><small>${g.black||'先手'} vs ${g.white||'後手'}・${g.moves.length}手${g.photos.length?'・📷'+g.photos.length:''}</small></button><button class="ic" data-del="${g.id}">🗑</button></div>`).join('')}
- <div class="row"><button id="tgAI">⚙ AI表示の設定</button><button id="tgChara">${st.hideChara?'キャラクターを表示':'キャラクターを隠す'}</button></div>`);
+ <div class="row"><button id="tgAI">⚙ AI表示・駒の表示</button><button id="tgChara">${st.hideChara?'キャラクターを表示':'キャラクターを隠す'}</button></div>`);
  $('#ngGo').onclick=()=>{closeSheet();newGame($('#ngH').value,$('#ngB').value,$('#ngW').value);say('新しい対局だよ。最初に盤面を撮ると、写真で手を読み取れるよ',true)};
  $('#tgAI').onclick=()=>openAIView();$('#tgChara').onclick=()=>{st.hideChara=!st.hideChara;save();render();closeSheet();};
  $('#shBody').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{st.cur=b.dataset.open;save();closeSheet();load();});

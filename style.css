@@ -132,3 +132,7 @@ body.playing .boardwrap,body.playing .hand,body.playing .playtop,body.playing #e
 .aiv-hide #ktEval,.aiv-hide .ktst,.aiv-hide .wr,.aiv-hide #ktLines,.aiv-hide #ktGraph,.aiv-hide #ktMulti,.aiv-hide .mk{display:none!important}
 .aiv{margin-top:8px}.aiv .row{align-items:center}
 .chara.avoid{visibility:hidden}
+/* 大駒を強調 */
+.bigp .cell.big span{font-size:calc(1em * var(--bps,1.1));font-weight:900;line-height:1;-webkit-text-stroke:.4px currentColor}
+.bigk .cell.kg span{font-size:calc(1em * (1 + (var(--bps,1.1) - 1) * .6));font-weight:900;line-height:1}
+.bigp .hand .hp.big span{font-size:calc(1em * var(--bps,1.1));font-weight:900;-webkit-text-stroke:.4px currentColor}
