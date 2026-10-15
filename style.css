@@ -78,3 +78,6 @@ footer #bUndo{flex:.6}
 .mk{font-style:normal;font-size:12px;padding:1px 6px;border-radius:8px;margin-left:4px}.mk.bad{background:#e53935;color:#fff}.mk.dub{background:#fb8c00;color:#fff}
 .nav #bKento{max-width:56px}
 .kento .row select{flex:1;width:auto;margin:0}
+
+.det{display:flex;align-items:center;gap:8px;margin:8px 0 2px;font-size:14px}.det span:first-child{flex:1}
+.cbar{width:90px;height:8px;border-radius:4px;background:rgba(128,128,128,.3);overflow:hidden}.cbar i{display:block;height:100%;width:0;background:#00c853;transition:width .3s}

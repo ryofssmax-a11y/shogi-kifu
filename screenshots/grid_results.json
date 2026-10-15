@@ -1,0 +1,1292 @@
+[
+ {
+  "cat": "標準",
+  "errCell": 0.028,
+  "conf": 0.77,
+  "ok": true,
+  "ms": 696,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 0,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "標準",
+  "errCell": 0.05,
+  "conf": 1,
+  "ok": true,
+  "ms": 664,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "標準",
+  "errCell": 0.051,
+  "conf": 0.81,
+  "ok": true,
+  "ms": 710,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 358,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "標準",
+  "errCell": 0.064,
+  "conf": 1,
+  "ok": true,
+  "ms": 679,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 4,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "標準",
+  "errCell": 0.038,
+  "conf": 1,
+  "ok": true,
+  "ms": 604,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 356,
+   "got": 0,
+   "conf": 0.97,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "標準",
+  "errCell": 1.644,
+  "conf": 0.58,
+  "ok": true,
+  "ms": 596,
+  "src": "hough",
+  "oriOk": null,
+  "oriInfo": null
+ },
+ {
+  "cat": "標準",
+  "errCell": 0.041,
+  "conf": 1,
+  "ok": true,
+  "ms": 642,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 0,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "標準",
+  "errCell": 0.036,
+  "conf": 1,
+  "ok": true,
+  "ms": 639,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.039,
+  "conf": 1,
+  "ok": true,
+  "ms": 672,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.042,
+  "conf": 1,
+  "ok": true,
+  "ms": 619,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.046,
+  "conf": 1,
+  "ok": true,
+  "ms": 695,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.044,
+  "conf": 1,
+  "ok": true,
+  "ms": 629,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.036,
+  "conf": 1,
+  "ok": true,
+  "ms": 636,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 4,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.047,
+  "conf": 1,
+  "ok": true,
+  "ms": 595,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.044,
+  "conf": 1,
+  "ok": true,
+  "ms": 614,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 0,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "傾き(斜めから)",
+  "errCell": 0.063,
+  "conf": 0.92,
+  "ok": true,
+  "ms": 626,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.041,
+  "conf": 1,
+  "ok": true,
+  "ms": 661,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 14,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.054,
+  "conf": 1,
+  "ok": true,
+  "ms": 701,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 354,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.028,
+  "conf": 1,
+  "ok": true,
+  "ms": 697,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 11,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.051,
+  "conf": 1,
+  "ok": true,
+  "ms": 680,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 360,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.054,
+  "conf": 1,
+  "ok": true,
+  "ms": 652,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 341,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.064,
+  "conf": 1,
+  "ok": true,
+  "ms": 677,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 13,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.063,
+  "conf": 1,
+  "ok": true,
+  "ms": 657,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.97,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "回転±25°",
+  "errCell": 0.068,
+  "conf": 1,
+  "ok": true,
+  "ms": 673,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 10,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.116,
+  "conf": 1,
+  "ok": true,
+  "ms": 610,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 360,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.063,
+  "conf": 1,
+  "ok": true,
+  "ms": 551,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.067,
+  "conf": 1,
+  "ok": true,
+  "ms": 563,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.061,
+  "conf": 1,
+  "ok": true,
+  "ms": 598,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.061,
+  "conf": 1,
+  "ok": true,
+  "ms": 618,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.93,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.042,
+  "conf": 1,
+  "ok": true,
+  "ms": 577,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 1,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.052,
+  "conf": 1,
+  "ok": true,
+  "ms": 597,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "小さく写る",
+  "errCell": 0.064,
+  "conf": 1,
+  "ok": true,
+  "ms": 487,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.051,
+  "conf": 0.99,
+  "ok": true,
+  "ms": 646,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.054,
+  "conf": 1,
+  "ok": true,
+  "ms": 660,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.087,
+  "conf": 1,
+  "ok": true,
+  "ms": 653,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 0,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.039,
+  "conf": 1,
+  "ok": true,
+  "ms": 654,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.048,
+  "conf": 1,
+  "ok": true,
+  "ms": 666,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.93,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.066,
+  "conf": 1,
+  "ok": true,
+  "ms": 661,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.93,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.05,
+  "conf": 1,
+  "ok": true,
+  "ms": 645,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 0,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "大きく写る",
+  "errCell": 0.05,
+  "conf": 1,
+  "ok": true,
+  "ms": 680,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.075,
+  "conf": 1,
+  "ok": true,
+  "ms": 699,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.067,
+  "conf": 1,
+  "ok": true,
+  "ms": 642,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 360,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.063,
+  "conf": 1,
+  "ok": true,
+  "ms": 646,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.031,
+  "conf": 1,
+  "ok": true,
+  "ms": 602,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.036,
+  "conf": 1,
+  "ok": true,
+  "ms": 637,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 356,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.069,
+  "conf": 0.99,
+  "ok": true,
+  "ms": 635,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.073,
+  "conf": 1,
+  "ok": true,
+  "ms": 629,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "背景が散らかっている",
+  "errCell": 0.034,
+  "conf": 1,
+  "ok": true,
+  "ms": 636,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 1,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.112,
+  "conf": 1,
+  "ok": true,
+  "ms": 640,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 1,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.069,
+  "conf": 1,
+  "ok": true,
+  "ms": 649,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.06,
+  "conf": 1,
+  "ok": true,
+  "ms": 635,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.037,
+  "conf": 1,
+  "ok": true,
+  "ms": 596,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 4,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.068,
+  "conf": 0.81,
+  "ok": true,
+  "ms": 617,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.97,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.056,
+  "conf": 1,
+  "ok": true,
+  "ms": 668,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 3,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.039,
+  "conf": 1,
+  "ok": true,
+  "ms": 661,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 358,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "木のテーブルの上",
+  "errCell": 0.068,
+  "conf": 0.84,
+  "ok": true,
+  "ms": 656,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.093,
+  "conf": 0.78,
+  "ok": true,
+  "ms": 616,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.044,
+  "conf": 0.71,
+  "ok": true,
+  "ms": 646,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.031,
+  "conf": 1,
+  "ok": true,
+  "ms": 642,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 4,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.059,
+  "conf": 0.98,
+  "ok": true,
+  "ms": 589,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 356,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.088,
+  "conf": 0.72,
+  "ok": true,
+  "ms": 615,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 1,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.064,
+  "conf": 0.79,
+  "ok": true,
+  "ms": 663,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.075,
+  "conf": 1,
+  "ok": true,
+  "ms": 618,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "暗い・ムラ",
+  "errCell": 0.039,
+  "conf": 0.96,
+  "ok": true,
+  "ms": 660,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.035,
+  "conf": 1,
+  "ok": true,
+  "ms": 642,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 36
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.062,
+  "conf": 0.81,
+  "ok": true,
+  "ms": 607,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 38
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 1.644,
+  "conf": 0.74,
+  "ok": true,
+  "ms": 621,
+  "src": "hough",
+  "oriOk": null,
+  "oriInfo": null
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.06,
+  "conf": 1,
+  "ok": true,
+  "ms": 607,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 357,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 37
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.068,
+  "conf": 1,
+  "ok": true,
+  "ms": 620,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.92,
+   "occ": 36
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.063,
+  "conf": 0.71,
+  "ok": true,
+  "ms": 646,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 2,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 37
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.12,
+  "conf": 0.92,
+  "ok": true,
+  "ms": 649,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 359,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 36
+  }
+ },
+ {
+  "cat": "手で一部隠れる",
+  "errCell": 0.09,
+  "conf": 1,
+  "ok": true,
+  "ms": 583,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 356,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 34
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.072,
+  "conf": 1,
+  "ok": true,
+  "ms": 619,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 91,
+   "got": 1,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.059,
+  "conf": 0.94,
+  "ok": true,
+  "ms": 610,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 185,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.044,
+  "conf": 1,
+  "ok": true,
+  "ms": 675,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 93,
+   "got": 1,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.059,
+  "conf": 1,
+  "ok": true,
+  "ms": 663,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 278,
+   "got": 1,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.021,
+  "conf": 1,
+  "ok": true,
+  "ms": 539,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 263,
+   "got": 1,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.048,
+  "conf": 1,
+  "ok": true,
+  "ms": 613,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 269,
+   "got": 1,
+   "conf": 0.95,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 0.068,
+  "conf": 1,
+  "ok": true,
+  "ms": 617,
+  "src": "hough",
+  "oriOk": false,
+  "oriInfo": {
+   "rot": 183,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 40
+  }
+ },
+ {
+  "cat": "90°/180°回転",
+  "errCell": 1.644,
+  "conf": 0.47,
+  "ok": true,
+  "ms": 580,
+  "src": "hough",
+  "oriOk": null,
+  "oriInfo": null
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 1.736,
+  "conf": 0,
+  "ok": false,
+  "ms": 526,
+  "src": "hough",
+  "oriOk": null,
+  "oriInfo": null
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 0.033,
+  "conf": 1,
+  "ok": true,
+  "ms": 494,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 5,
+   "got": 0,
+   "conf": 0.9,
+   "occ": 35
+  }
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 0.082,
+  "conf": 1,
+  "ok": true,
+  "ms": 529,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 355,
+   "got": 0,
+   "conf": 0.94,
+   "occ": 39
+  }
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 0.053,
+  "conf": 1,
+  "ok": true,
+  "ms": 444,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 5,
+   "got": 0,
+   "conf": 0.97,
+   "occ": 36
+  }
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 0.038,
+  "conf": 0.95,
+  "ok": true,
+  "ms": 546,
+  "src": "wood-in",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 8,
+   "got": 0,
+   "conf": 0.96,
+   "occ": 33
+  }
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 1.78,
+  "conf": 0.12,
+  "ok": false,
+  "ms": 559,
+  "src": "hough",
+  "oriOk": null,
+  "oriInfo": null
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 0.07,
+  "conf": 1,
+  "ok": true,
+  "ms": 521,
+  "src": "hough",
+  "oriOk": true,
+  "oriInfo": {
+   "rot": 341,
+   "got": 0,
+   "conf": 0.91,
+   "occ": 34
+  }
+ },
+ {
+  "cat": "全部入り",
+  "errCell": 1.582,
+  "conf": 0,
+  "ok": false,
+  "ms": 583,
+  "src": "hough",
+  "oriOk": null,
+  "oriInfo": null
+ }
+]

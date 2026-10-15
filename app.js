@@ -118,16 +118,28 @@ async function openCam(){const hasRef=!!(await getRef(view));
 function placeGuide(){const v=$('#vid'),g=$('#guide');if(!v||!g||!v.videoWidth)return;const w=v.clientWidth,h=v.clientHeight,c=guideCorners(w,h);Object.assign(g.style,{left:c[0][0]+'px',top:c[0][1]+'px',width:c[1][0]-c[0][0]+'px',height:c[3][1]-c[0][1]+'px'});}
 function toAdjust(cv,fromGuide,onOk){shot=cv;const w=cv.width,h=cv.height;
  corners=st.corners?st.corners.map(([x,y])=>[x*w,y*h]):guideCorners(w,h);
- openSheet('盤の四隅を合わせる',`<div class="camwrap"><canvas id="adj"></canvas></div><p class="hint">オレンジの丸を盤の四隅（マスの外枠）までドラッグしてください。「タップで指定」なら左上→右上→右下→左下の順にタップします。</p>
- <div class="row"><button id="aTap">タップで指定</button><button id="aGuide">枠に戻す</button></div><button class="pri" id="aOk" style="width:100%;min-height:56px">この範囲で読み取る</button>`);
- const c=$('#adj');c.width=w;c.height=h;let drag=-1,tapMode=-1;
- const draw=()=>{const x=c.getContext('2d');x.drawImage(shot,0,0);x.strokeStyle='#ffeb3b';x.lineWidth=Math.max(2,w/300);
+ openSheet('盤の四隅を合わせる',`<div class="camwrap"><canvas id="adj"></canvas></div><div id="aDet" class="det"><span id="aDetTxt">盤を探しています…</span><span class="cbar"><i id="aDetBar"></i></span></div>
+ <p class="hint" id="aHint">緑の線がマス目に重なっていれば「OK」。ずれていれば「調整する」で四隅の丸をドラッグします。</p>
+ <div id="aAdjRow" class="row hidden"><button id="aTap">タップで指定</button><button id="aGuide">枠に戻す</button><button id="aRedo">自動で探し直す</button></div>
+ <div class="row"><button id="aAdj" style="flex:1;min-height:56px">調整する</button><button class="pri" id="aOk" style="flex:2;min-height:56px">OK</button></div>`);
+ const c=$('#adj');c.width=w;c.height=h;let drag=-1,tapMode=-1,adjusting=false,conf=-1;
+ const draw=()=>{const x=c.getContext('2d');x.drawImage(shot,0,0);x.strokeStyle=adjusting||conf<0?'#ffeb3b':conf>=.6?'#00e676':conf>=.3?'#ffc107':'#ff5252';x.lineWidth=Math.max(2,w/300);
   const H=V.homography([[0,0],[9,0],[9,9],[0,9]],corners);x.beginPath();for(let i=0;i<=9;i++){let a=V.mapPt(H,i,0),b=V.mapPt(H,i,9);x.moveTo(...a);x.lineTo(...b);a=V.mapPt(H,0,i);b=V.mapPt(H,9,i);x.moveTo(...a);x.lineTo(...b);}x.stroke();
-  corners.forEach(([px,py],i)=>{x.fillStyle=i===tapMode?'#4fa3ff':'rgba(255,138,61,.9)';x.beginPath();x.arc(px,py,w/40,0,7);x.fill();});};
+  if(adjusting)corners.forEach(([px,py],i)=>{x.fillStyle=i===tapMode?'#4fa3ff':'rgba(255,138,61,.9)';x.beginPath();x.arc(px,py,w/40,0,7);x.fill();});};
  draw();const pt=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*w/r.width,(e.clientY-r.top)*h/r.height]};
- c.onpointerdown=e=>{const p=pt(e);if(tapMode>=0){corners[tapMode]=p;tapMode=tapMode<3?tapMode+1:-1;draw();return;}
+ c.onpointerdown=e=>{if(!adjusting)return;const p=pt(e);if(tapMode>=0){corners[tapMode]=p;tapMode=tapMode<3?tapMode+1:-1;draw();return;}
   let best=-1,bd=1e9;corners.forEach((q,i)=>{const d=Math.hypot(q[0]-p[0],q[1]-p[1]);if(d<bd){bd=d;best=i}});if(bd<w/6){drag=best;c.setPointerCapture(e.pointerId);}};
  c.onpointermove=e=>{if(drag<0)return;corners[drag]=pt(e);draw();};c.onpointerup=()=>{drag=-1};
+ const setAdj=on=>{adjusting=on;$('#aAdjRow').classList.toggle('hidden',!on);$('#aAdj').textContent=on?'調整中…':'調整する';$('#aHint').textContent=on?'オレンジの丸を盤の四隅（マスの外枠）までドラッグしてください。「タップで指定」なら左上→右上→右下→左下の順にタップします。':'緑の線がマス目に重なっていれば「OK」。ずれていれば「調整する」で四隅の丸をドラッグします。';draw();};
+ $('#aAdj').onclick=()=>setAdj(true);
+ const showConf=(d)=>{conf=d?d.conf:-1;const t=$('#aDetTxt'),bar=$('#aDetBar');if(!t)return;
+  if(!d||!d.ok){t.textContent='盤を自動で見つけられませんでした。四隅を合わせてください';bar.style.width='0';setAdj(true);return;}
+  const pct=Math.round(d.conf*100);t.textContent=`盤を検出しました（信頼度 ${pct}%${d.conf<.6?'・念のため確認を':''}）`;bar.style.width=pct+'%';bar.style.background=d.conf>=.6?'#00c853':d.conf>=.3?'#ffb300':'#e53935';draw();};
+ const runDetect=async()=>{if(!window.GridDetect){showConf(null);return;}$('#aDetTxt').textContent='盤を探しています…';await new Promise(r=>setTimeout(r,30));
+  try{const prior=st.corners?st.corners.map(([x,y])=>[x*w,y*h]):null;if(window.Recog)Recog.load().catch(()=>{});const d=await GridDetect.auto(shot,{prior,expect:(!onOk&&!window.camHook&&typeof pos==='function')?pos():null});
+   if(d.ok){const diag=Math.hypot(w,h),keep=prior&&GridDetect.align(d.corners,prior).every((p,i)=>Math.hypot(p[0]-prior[i][0],p[1]-prior[i][1])<diag*.02);corners=keep?prior:d.corners;}
+   window.lastGridDetect=d;showConf(d);}catch(e){console.error(e);showConf(null);}};
+ $('#aRedo').onclick=()=>{setAdj(false);runDetect();};runDetect();
  $('#aTap').onclick=()=>{tapMode=0;draw();toast('左上の角をタップ');};$('#aGuide').onclick=()=>{corners=guideCorners(w,h);draw();};
  $('#aOk').onclick=()=>{st.corners=corners.map(([x,y])=>[x/w,y/h]);save();if(onOk)return onOk();if(window.camHook){const hk=camHook;camHook=null;return hk(V.rectify(shot.getContext('2d').getImageData(0,0,w,h),corners,360));}
   const img=V.rectify(shot.getContext('2d').getImageData(0,0,w,h),corners,RS);analyze(img);};}
