@@ -10,7 +10,7 @@ function toSFEN(p){let s='';for(let r=0;r<9;r++){let e=0;for(let c=0;c<9;c++){co
  return s+' '+(p.turn?'w':'b')+' '+(h||'-')+' 1';}
 const sqU=(r,c)=>(9-c)+'abcdefghi'[r];
 const usi=m=>m.drop?m.k+'*'+sqU(m.tr,m.tc):sqU(m.fr,m.fc)+sqU(m.tr,m.tc)+(m.promote?'+':'');
-function positionCmd(ply){return 'position sfen '+toSFEN(ps[0])+(ply?' moves '+game.moves.slice(0,ply).map(usi).join(' '):'');}
+function positionCmd(ply){if(window.PLAY&&PLAY.posOverride)return PLAY.posOverride(ply);return 'position sfen '+toSFEN(ps[0])+(ply?' moves '+game.moves.slice(0,ply).map(usi).join(' '):'');}
 function pvToJa(p,tokens,prev,max=10){const out=[];for(const t of tokens.slice(0,max)){const m=S.legal(p).find(x=>usi(x)===t);if(!m)break;out.push(S.notation(p,m,prev));p=S.apply(p,m);prev=m;}return out;}
 // 評価値（先手から見た値）と勝率
 const winRate=cp=>1/(1+Math.exp(-cp/600));
@@ -34,7 +34,7 @@ const cmd=c=>KT.w.postMessage({type:'cmd',cmd:c});
 // ---------- 探索の開始・停止（bestmove を待ってから次へ） ----------
 function search(req){KT.pending=req;if(KT.searching){cmd('stop');return;}runPending();}
 function runPending(){const r=KT.pending;KT.pending=null;if(!r)return;KT.info={};KT.cur=r;KT.searching=true;KT.t0=performance.now();
- cmd('setoption name MultiPV value '+r.multipv);cmd('usinewgame');cmd(positionCmd(r.ply));cmd(r.time?'go btime 0 wtime 0 byoyomi '+r.time:'go infinite');paintSoon();}
+ cmd('setoption name MultiPV value '+r.multipv);cmd('usinewgame');cmd(positionCmd(r.ply));cmd(r.go||(r.time?'go btime 0 wtime 0 byoyomi '+r.time:'go infinite'));paintSoon();}
 function stopSearch(){KT.pending=null;if(KT.searching)cmd('stop');}
 function onLine(l){if(l.startsWith('info ')&&/ pv /.test(l)&&KT.cur){const t=l.split(' '),g=k=>{const i=t.indexOf(k);return i<0?null:t[i+1]};
   if(t.includes('lowerbound')||t.includes('upperbound'))return;

@@ -81,3 +81,10 @@ footer #bUndo{flex:.6}
 
 .det{display:flex;align-items:center;gap:8px;margin:8px 0 2px;font-size:14px}.det span:first-child{flex:1}
 .cbar{width:90px;height:8px;border-radius:4px;background:rgba(128,128,128,.3);overflow:hidden}.cbar i{display:block;height:100%;width:0;background:#00c853;transition:width .3s}
+.playbar{margin:6px 10px;padding:8px 10px;border-radius:12px;background:var(--card,rgba(128,128,128,.12));font-size:14px}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:2px 0}.pclk{font-variant-numeric:tabular-nums;padding:1px 8px;border-radius:6px}.pclk.on{background:var(--acc);color:#fff}.pclk.low{background:#e53935;color:#fff}
+.pst{margin:4px 0;font-weight:bold}.playbar .row button{flex:1;font-size:13px;padding:6px 2px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--acc);border-right-color:transparent;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}@keyframes sp{to{transform:rotate(360deg)}}
+.cell.hint{box-shadow:inset 0 0 0 3px #29b6f6;background:rgba(41,182,246,.25)}
+.chara.think #slime{animation:think 1s ease-in-out infinite}@keyframes think{50%{transform:scale(1.06,.94) rotate(-4deg)}}
+.pawait{padding:8px;border-radius:10px;background:rgba(255,138,61,.15);margin-bottom:8px}label.chk{display:flex;gap:6px;align-items:flex-start;font-size:13px;margin:6px 0}

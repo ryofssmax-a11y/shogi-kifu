@@ -89,7 +89,10 @@ function toKIF(game){const d=new Date(game.created||Date.now()),z=n=>String(n).p
  s+=(ho?'下手：':'先手：')+(game.black||'')+'\n'+(ho?'上手：':'後手：')+(game.white||'')+'\n';
  s+='手数----指手---------消費時間--\n';
  game.moves.forEach((m,i)=>{s+=String(i+1).padStart(4,' ')+' '+kifMove(m,game.moves[i-1]).padEnd(12,'　').replace(/　+$/,'')+'   ( 0:00/00:00:00)\n';});
- s+=String(game.moves.length+1).padStart(4,' ')+' 中断\nまで'+game.moves.length+'手で中断\n';return s;}
+ const R=game.result,N=game.moves.length,wn=o=>o?(ho?'上手':'後手'):(ho?'下手':'先手');
+ if(R){const end={'投了':'投了','詰み':'詰み','千日手':'千日手','入玉宣言':'入玉勝ち','切れ負け':'切れ負け','連続王手':'反則負け'}[R.reason]||'中断';
+  s+=String(N+1).padStart(4,' ')+' '+end+'\n'+(R.reason==='千日手'?'まで'+N+'手で千日手\n':R.reason==='切れ負け'?'まで'+N+'手で時間切れにより'+wn(R.winner)+'の勝ち\n':R.reason==='連続王手'?'まで'+N+'手で連続王手の千日手により'+wn(R.winner)+'の勝ち\n':'まで'+N+'手で'+wn(R.winner)+'の勝ち\n');return s;}
+ s+=String(N+1).padStart(4,' ')+' 中断\nまで'+N+'手で中断\n';return s;}
 const NAMES_ALL=[['成香','L',1],['成桂','N',1],['成銀','S',1],['歩','P',0],['香','L',0],['桂','N',0],['銀','S',0],['金','G',0],['角','B',0],['飛','R',0],['玉','K',0],['王','K',0],['と','P',1],['杏','L',1],['圭','N',1],['全','S',1],['馬','B',1],['龍','R',1],['竜','R',1]];
 function parseKIF(text){const lines=text.replace(/\r/g,'').split('\n');let h='平手',black='',white='';
  for(const l of lines){let m;if(m=l.match(/^手合割[：:](.+)/))h=m[1].trim();if(m=l.match(/^(先手|下手)[：:](.*)/))black=m[2].trim();if(m=l.match(/^(後手|上手)[：:](.*)/))white=m[2].trim();}
