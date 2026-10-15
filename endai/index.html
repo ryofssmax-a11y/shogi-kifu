@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>縁台将棋</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 盤が主役。広い画面は左に盤・右に操作と棋譜、狭い画面は縦に積む。
+   初代iPad mini (iOS 9 Safari) 対応のため、CSS Grid・gap・CSS変数・aspect-ratio は使わず、
+   木の盤面ひとつの配色（ライト固定）で色をすべて直接指定している。 */
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:#e3e8e6;color:#1c2226;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-size:15px;line-height:1.6;margin:0;
+  padding-left:16px;padding-right:16px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-top:18px;padding-bottom:40px}
+.wrap{max-width:1000px;margin:0 auto}
+.top{margin-bottom:12px}
+.top h1{display:inline-block;font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:800;font-size:30px;letter-spacing:.08em;margin:0 14px 0 0;line-height:1.2;vertical-align:baseline}
+.top p{display:inline-block;margin:0;color:#56636a;font-size:13px}
+
+.game{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-align-items:flex-start;align-items:flex-start;margin-right:-28px}
+.col-board{width:100%;max-width:620px;margin-right:28px;margin-bottom:16px}
+.side{-webkit-flex:1 1 280px;flex:1 1 280px;min-width:0;margin-right:28px}
+
+.status{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-flex-wrap:wrap;flex-wrap:wrap;min-height:40px;margin-bottom:8px}
+.status > *{margin-right:10px}
+.status .mark{font-size:20px;line-height:1}
+.status .text{font-weight:700;font-size:17px}
+.chip{font-size:12px;font-weight:700;letter-spacing:.08em;padding:2px 10px;border-radius:99px;background:#c2372a;color:#fff}
+.status .ply{margin-left:auto;margin-right:0;color:#56636a;font-size:13px}
+.status.over .text{color:#284a79}
+
+.stand{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;background:#cfa15b;color:#3a2810;border-radius:6px;padding:6px 10px;min-height:66px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.stand.top-s{margin-bottom:8px}.stand.bot-s{margin-top:8px}
+.stand.active{box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 2px #284a79}
+.who{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:center;align-items:center;font-size:12px;font-weight:700;line-height:1.3;min-width:46px;margin-right:10px;opacity:.75}
+.who b{font-size:18px;line-height:1.1}
+.stand.active .who{opacity:1}
+.pieces{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-flex:1;flex:1;min-width:0}
+.empty{font-size:12px;opacity:.6}
+.hand{position:relative;width:52px;height:57px;margin:1px 4px 1px 0;border-radius:4px;cursor:pointer;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
+.hand.sel{background:#c7a25f;box-shadow:0 0 0 2px #284a79}
+.hand .n{position:absolute;right:-4px;bottom:-2px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#3a2810;color:#fbe9c6;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+
+.board{background:#c48f48;border-radius:6px;padding:4px 10px 10px;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.files{display:-webkit-flex;display:flex;padding-right:18px}
+.files span,.ranks span{font-size:12px;font-weight:700;color:#3a2810;text-align:center}
+.files span{-webkit-flex:1;flex:1;line-height:20px}
+.body{display:-webkit-flex;display:flex}
+.grid-wrap{position:relative;-webkit-flex:1;flex:1;min-width:0}
+.grid{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;border-top:1px solid #3a2810;border-left:1px solid #3a2810}
+.ranks{width:18px;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column}
+.ranks span{-webkit-flex:1;flex:1;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif}
+.hoshi{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#3a2810;pointer-events:none}
+.cell{position:relative;width:11.1111%;-webkit-flex:0 0 11.1111%;flex:0 0 11.1111%;border-right:1px solid #3a2810;border-bottom:1px solid #3a2810;background:#e3b971;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation}
+.cell:before{content:"";display:block;padding-top:109%}
+.cell .in{position:absolute;top:0;left:0;right:0;bottom:0;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
+.cell:focus{outline:2px solid #284a79;outline-offset:-2px}
+.cell.last{background:#cf9d52}
+.cell.sel{background:#c7a25f}
+.cell.check{background:#e98a73}
+.cell.hint .in:after{content:"";position:absolute;top:37%;left:37%;width:26%;height:24%;border-radius:50%;background:rgba(22,40,78,.6)}
+.cell.hint.cap .in:after{top:4%;left:4%;width:92%;height:92%;border-radius:4px;background:none;box-shadow:inset 0 0 0 3px rgba(22,40,78,.6)}
+
+.pc{position:relative;width:86%;height:92%;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;pointer-events:none;
+  -webkit-filter:drop-shadow(0 1px 1px rgba(40,24,6,.6));filter:drop-shadow(0 1px 1px rgba(40,24,6,.6))}
+.pc:before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:#f5deaf;background:linear-gradient(172deg,#fcefcf,#f5deaf 55%,#e2bf82);
+  -webkit-clip-path:polygon(50% 0,85% 15%,100% 100%,0 100%,15% 15%);clip-path:polygon(50% 0,85% 15%,100% 100%,0 100%,15% 15%)}
+.pc .g{position:relative;font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:800;font-size:26px;line-height:1;color:#1b1209;padding-top:14%}
+.pc.pro .g{color:#b01f14}
+.pc.opp{-webkit-transform:rotate(180deg);transform:rotate(180deg)}
+
+.actions{margin-bottom:10px}
+.btn{font-family:inherit;font-size:14px;font-weight:500;color:#1c2226;background:#f4f6f5;border:1px solid #c4cdca;border-radius:8px;padding:8px 14px;margin:0 8px 8px 0;cursor:pointer;-webkit-appearance:none;touch-action:manipulation}
+.btn:focus{outline:2px solid #284a79;outline-offset:2px}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.primary{background:#284a79;color:#fff;border-color:#284a79;font-weight:700;margin-bottom:0}
+.btn.armed{background:#c2372a;border-color:#c2372a;color:#fff}
+
+.panel{background:#f4f6f5;border:1px solid #c4cdca;border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.panel h2{margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.12em;color:#56636a}
+.field{margin-bottom:12px}
+.field > span{display:block;font-size:13px;color:#56636a;margin-bottom:6px}
+.seg{display:-webkit-flex;display:flex;border:1px solid #c4cdca;border-radius:8px;overflow:hidden;background:#e3e8e6}
+.seg button{-webkit-flex:1;flex:1;font-family:inherit;font-size:14px;padding:7px 6px;border:0;border-radius:0;background:none;color:#1c2226;cursor:pointer;-webkit-appearance:none;touch-action:manipulation}
+.seg button + button{border-left:1px solid #c4cdca}
+.seg button.on{background:#284a79;color:#fff;font-weight:700}
+.note{font-size:12px;color:#56636a;margin:0 0 10px}
+
+.kifu-head{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:10px}
+.kifu-head h2{margin:0}
+.kifu-head .btn{padding:4px 10px;font-size:12px;margin:0}
+.kifu{list-style:none;margin:0;padding:0;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+.kifu li{width:50%;padding:2px 12px 2px 0;font-size:14px;border-bottom:1px dashed #c4cdca}
+.kifu li .no{display:inline-block;color:#56636a;width:2.4em;text-align:right;font-size:12px;margin-right:8px}
+.kifu li.cur{color:#284a79;font-weight:700}
+.kifu-empty{font-size:13px;color:#56636a;margin:0}
+.kifu-text{width:100%;height:140px;margin-top:10px;font-size:13px;font-family:inherit;border:1px solid #c4cdca;border-radius:6px;padding:8px;background:#fff;color:#1c2226}
+
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,14,18,.45);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;z-index:10;padding:16px}
+.dialog{background:#f4f6f5;color:#1c2226;border-radius:12px;padding:18px 20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.dialog p{margin:0 0 14px;font-weight:700}
+.choice{display:inline-block;vertical-align:top;margin:0 7px;border:1px solid #c4cdca;background:#e3b971;border-radius:8px;padding:10px 14px 8px;cursor:pointer;font-family:inherit;font-size:14px;color:#3a2810;font-weight:700;-webkit-appearance:none}
+.choice .pcbox{width:56px;height:60px;margin:0 auto 6px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
+.choice .pc .g{font-size:30px}
+.toast{position:fixed;left:50%;bottom:20px;-webkit-transform:translateX(-50%);transform:translateX(-50%);background:#1c2226;color:#e3e8e6;padding:8px 16px;border-radius:99px;font-size:13px;z-index:20;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>縁台将棋</h1>
+    <p>ひとつの画面で二人対局、またはCPUと対局</p>
+  </header>
+
+  <div class="game">
+    <div class="col-board">
+      <div class="status" id="status">
+        <span class="mark" id="stMark">▲</span><span class="text" id="stText"></span>
+        <span class="chip" id="stCheck" hidden>王手</span>
+        <span class="ply" id="stPly"></span>
+      </div>
+      <div class="stand top-s" id="standTop"></div>
+      <div class="board">
+        <div class="files" id="files"></div>
+        <div class="body">
+          <div class="grid-wrap">
+            <div class="grid" id="grid"></div>
+            <i class="hoshi" style="left:33.333%;top:33.333%"></i><i class="hoshi" style="left:66.667%;top:33.333%"></i>
+            <i class="hoshi" style="left:33.333%;top:66.667%"></i><i class="hoshi" style="left:66.667%;top:66.667%"></i>
+          </div>
+          <div class="ranks" id="ranks"></div>
+        </div>
+      </div>
+      <div class="stand bot-s" id="standBottom"></div>
+    </div>
+
+    <div class="side">
+      <div class="actions">
+        <button class="btn" id="btnUndo" type="button">待った</button><button class="btn" id="btnFlip" type="button">盤を反転</button><button class="btn" id="btnResign" type="button">投了</button>
+      </div>
+
+      <section class="panel">
+        <h2>対局の設定</h2>
+        <div class="field"><span>対局方法</span>
+          <div class="seg" id="segMode"><button type="button" data-v="pvp">二人で対局</button><button type="button" data-v="cpu">CPUと対局</button></div>
+        </div>
+        <div class="field" id="fHuman"><span>あなたの手番</span>
+          <div class="seg" id="segHuman"><button type="button" data-v="0">▲ 先手</button><button type="button" data-v="1">△ 後手</button></div>
+        </div>
+        <div class="field" id="fLevel"><span>CPUの強さ</span>
+          <div class="seg" id="segLevel"><button type="button" data-v="0">やさしい</button><button type="button" data-v="1">ふつう</button><button type="button" data-v="2">つよい</button></div>
+        </div>
+        <p class="note" id="pendingNote" hidden>設定は「新しい対局」を押すと反映されます。</p>
+        <button class="btn primary" id="btnNew" type="button">新しい対局</button>
+      </section>
+
+      <section class="panel">
+        <div class="kifu-head"><h2>棋譜</h2><button class="btn" id="btnCopy" type="button">棋譜をコピー</button></div>
+        <ol class="kifu" id="kifu"></ol>
+        <p class="kifu-empty" id="kifuEmpty">まだ指し手はありません。先手から指してください。</p>
+        <textarea class="kifu-text" id="kifuText" readonly hidden></textarea>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="promo" hidden>
+  <div class="dialog" role="dialog" aria-modal="true">
+    <p>成りますか？</p>
+    <button class="choice" type="button" id="promoYes"><span class="pcbox" id="promoYesPc"></span>成る</button><button class="choice" type="button" id="promoNo"><span class="pcbox" id="promoNoPc"></span>成らない</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<style id="dyn"></style>
+
+<script>
+/* ES5のみで記述（iOS 9 Safari 対応） */
+/* ===== ENGINE ===== */
+var FU=1,KY=2,KE=3,GI=4,KI=5,KA=6,HI=7,OU=8,TO=9,NY=10,NK=11,NG=12,UM=14,RY=15;
+var ORTH=[[0,-1],[0,1],[-1,0],[1,0]], DIAG=[[-1,-1],[1,-1],[-1,1],[1,1]];
+var GOLD=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[0,1]];
+var STEPS={}; STEPS[FU]=[[0,-1]]; STEPS[KE]=[[-1,-2],[1,-2]]; STEPS[GI]=[[-1,-1],[0,-1],[1,-1],[-1,1],[1,1]];
+STEPS[KI]=GOLD; STEPS[OU]=ORTH.concat(DIAG); STEPS[TO]=GOLD; STEPS[NY]=GOLD; STEPS[NK]=GOLD; STEPS[NG]=GOLD; STEPS[UM]=ORTH; STEPS[RY]=DIAG;
+var SLIDES={}; SLIDES[KY]=[[0,-1]]; SLIDES[KA]=DIAG; SLIDES[HI]=ORTH; SLIDES[UM]=DIAG; SLIDES[RY]=ORTH;
+var STEP_LIST=[]; (function(){ for(var k in STEPS){ var a=STEPS[k]; for(var i=0;i<a.length;i++) STEP_LIST.push([+k,a[i][0],a[i][1]]); } })();
+var RAYS=[[0,-1,[KY,HI,RY]],[0,1,[HI,RY]],[-1,0,[HI,RY]],[1,0,[HI,RY]],[-1,-1,[KA,UM]],[1,-1,[KA,UM]],[-1,1,[KA,UM]],[1,1,[KA,UM]]];
+var VAL=[0,1,3,4,5,6,8,10,0,6,6,6,6,0,11,13];
+var HV=[0,1.15,3.4,4.5,5.6,6.6,8.9,11.2,0];
+function base(k){ return k>8?k-8:k; }
+function zeros(n){ var a=[]; for(var i=0;i<n;i++) a.push(0); return a; }
+
+function initPos(){
+  var b=zeros(81), back=[KY,KE,GI,KI,OU,KI,GI,KE,KY];
+  for(var x=0;x<9;x++){ b[x]=-back[x]; b[72+x]=back[x]; b[18+x]=-FU; b[54+x]=FU; }
+  b[10]=-HI; b[16]=-KA; b[64]=KA; b[70]=HI;
+  return {b:b,h:[zeros(9),zeros(9)],k:[76,4],mat:0};
+}
+function clonePos(p){ return {b:p.b.slice(),h:[p.h[0].slice(),p.h[1].slice()],k:p.k.slice(),mat:p.mat}; }
+
+function pushMove(out,s,k,f,t,fy,ty){
+  var rf=s?8-fy:fy, rt=s?8-ty:ty;
+  if(k<=7&&k!==KI&&(rf<=2||rt<=2)){
+    out.push({f:f,t:t,pr:true});
+    if(((k===FU||k===KY)&&rt===0)||(k===KE&&rt<=1)) return;
+  }
+  out.push({f:f,t:t,pr:false});
+}
+function genMoves(p,s){
+  var b=p.b,out=[],sg=s?-1:1,i,j,q,k,x,y,st,sl,n,dx,dy,nx,ny,t;
+  for(i=0;i<81;i++){
+    q=b[i]; if(!q||(q>0)!==(sg>0)) continue;
+    k=q*sg; x=i%9; y=(i/9)|0;
+    st=STEPS[k];
+    if(st) for(n=0;n<st.length;n++){
+      dx=st[n][0]; dy=s?-st[n][1]:st[n][1]; nx=x+dx; ny=y+dy;
+      if(nx<0||nx>8||ny<0||ny>8) continue;
+      j=ny*9+nx; t=b[j]; if(t&&(t>0)===(sg>0)) continue;
+      pushMove(out,s,k,i,j,y,ny);
+    }
+    sl=SLIDES[k];
+    if(sl) for(n=0;n<sl.length;n++){
+      dx=sl[n][0]; dy=s?-sl[n][1]:sl[n][1]; nx=x+dx; ny=y+dy;
+      while(nx>=0&&nx<9&&ny>=0&&ny<9){
+        j=ny*9+nx; t=b[j]; if(t&&(t>0)===(sg>0)) break;
+        pushMove(out,s,k,i,j,y,ny); if(t) break; nx+=dx; ny+=dy;
+      }
+    }
+  }
+  var h=p.h[s],pf,r;
+  for(k=1;k<=7;k++){
+    if(!h[k]) continue;
+    pf=null;
+    if(k===FU){ pf=zeros(9); for(i=0;i<81;i++) if(b[i]===sg*FU) pf[i%9]=1; }
+    for(i=0;i<81;i++){
+      if(b[i]) continue;
+      y=(i/9)|0; r=s?8-y:y;
+      if((k===FU||k===KY)&&r===0) continue;
+      if(k===KE&&r<=1) continue;
+      if(k===FU&&pf[i%9]) continue;
+      out.push({f:-1,t:i,d:k});
+    }
+  }
+  return out;
+}
+function attacked(b,idx,by){
+  if(idx<0) return false;
+  var sg=by?-1:1,x=idx%9,y=(idx/9)|0,n,e,dy,sx,sy,q,kinds,m;
+  for(n=0;n<STEP_LIST.length;n++){
+    e=STEP_LIST[n]; dy=by?-e[2]:e[2]; sx=x-e[1]; sy=y-dy;
+    if(sx<0||sx>8||sy<0||sy>8) continue;
+    if(b[sy*9+sx]===sg*e[0]) return true;
+  }
+  for(n=0;n<RAYS.length;n++){
+    e=RAYS[n]; dy=by?-e[1]:e[1]; kinds=e[2]; sx=x-e[0]; sy=y-dy;
+    while(sx>=0&&sx<9&&sy>=0&&sy<9){
+      q=b[sy*9+sx];
+      if(q){ for(m=0;m<kinds.length;m++) if(q===sg*kinds[m]) return true; break; }
+      sx-=e[0]; sy-=dy;
+    }
+  }
+  return false;
+}
+function make(p,m,s){
+  var b=p.b,sg=s?-1:1;
+  if(m.f<0){ b[m.t]=sg*m.d; p.h[s][m.d]--; p.mat+=sg*(VAL[m.d]-HV[m.d]); m.cap=0; return; }
+  var q=b[m.f],k=q*sg,c=b[m.t]; m.cap=c;
+  if(c){ var ck=-c*sg,bk=base(ck); p.h[s][bk]++; p.mat+=sg*(VAL[ck]+HV[bk]); }
+  b[m.t]=m.pr?q+sg*8:q; b[m.f]=0;
+  if(m.pr) p.mat+=sg*(VAL[k+8]-VAL[k]);
+  if(k===OU) p.k[s]=m.t;
+}
+function unmake(p,m,s){
+  var b=p.b,sg=s?-1:1;
+  if(m.f<0){ b[m.t]=0; p.h[s][m.d]++; return; }
+  var q=b[m.t]; b[m.f]=m.pr?q-sg*8:q; b[m.t]=m.cap;
+  if(m.cap) p.h[s][base(-m.cap*sg)]--;
+  if(q*sg===OU) p.k[s]=m.f;
+}
+function inCheck(p,s){ return attacked(p.b,p.k[s],1-s); }
+function hasLegal(p,s){
+  var ms=genMoves(p,s);
+  for(var i=0;i<ms.length;i++){ var m=ms[i],sm=p.mat; make(p,m,s); var ok=!inCheck(p,s); unmake(p,m,s); p.mat=sm; if(ok) return true; }
+  return false;
+}
+function legalMoves(p,s){
+  var out=[],ms=genMoves(p,s);
+  for(var i=0;i<ms.length;i++){
+    var m=ms[i],sm=p.mat; make(p,m,s);
+    var ok=!inCheck(p,s);
+    if(ok&&m.f<0&&m.d===FU&&inCheck(p,1-s)&&!hasLegal(p,1-s)) ok=false; /* 打ち歩詰め */
+    unmake(p,m,s); p.mat=sm;
+    if(ok) out.push(m);
+  }
+  return out;
+}
+/* --- CPU --- */
+var BIG=100000, ABORT={abort:1}, deadline=0, nodes=0;
+function now(){ return (window.performance&&performance.now)?performance.now():new Date().getTime(); }
+function order(p,ms){
+  var b=p.b;
+  for(var i=0;i<ms.length;i++){ var m=ms[i],sc=0,c=b[m.t]; if(c){ sc+=VAL[Math.abs(c)]*10+(Math.abs(c)===OU?5000:0); } if(m.pr) sc+=4; if(m.f<0) sc-=1; m.o=sc; }
+  ms.sort(function(a,c){ return c.o-a.o; });
+}
+function negamax(p,d,a,beta,s){
+  if((++nodes&511)===0&&now()>deadline) throw ABORT;
+  if(attacked(p.b,p.k[1-s],s)) return BIG+d;
+  if(d===0) return s?-p.mat:p.mat;
+  var ms=genMoves(p,s); order(p,ms);
+  var best=-BIG*3;
+  for(var i=0;i<ms.length;i++){
+    var m=ms[i],sm=p.mat; make(p,m,s);
+    var v=-negamax(p,d-1,-beta,-a,1-s);
+    unmake(p,m,s); p.mat=sm;
+    if(v>best) best=v; if(v>a) a=v; if(a>=beta) break;
+  }
+  return best;
+}
+function think(p,s,legal,lv){
+  var maxD=[1,2,3][lv],noise=[1.8,0.4,0.08][lv];
+  deadline=now()+[400,2000,4500][lv]; nodes=0;
+  var w=clonePos(p), ms=[], i;
+  for(i=0;i<legal.length;i++) ms.push({f:legal[i].f,t:legal[i].t,d:legal[i].d,pr:legal[i].pr});
+  if(!ms.length) return null;
+  order(w,ms); var best=ms[0];
+  for(var d=1;d<=maxD;d++){
+    var bv=-Infinity,bm=null,sc=[];
+    try{
+      for(i=0;i<ms.length;i++){
+        var m=ms[i],sm=w.mat; make(w,m,s);
+        var alpha=bv===-Infinity?-BIG*4:bv-noise*2;
+        var v=-negamax(w,d-1,-BIG*4,-alpha,1-s);
+        unmake(w,m,s); w.mat=sm;
+        var vn=v+(Math.random()*2-1)*noise;
+        sc.push([vn,m]); if(vn>bv){ bv=vn; bm=m; }
+      }
+    }catch(e){ if(e!==ABORT) throw e; break; }
+    best=bm; sc.sort(function(x,y){ return y[0]-x[0]; });
+    ms=[]; for(i=0;i<sc.length;i++) ms.push(sc[i][1]);
+    if(bv>BIG/2) break;
+  }
+  return best;
+}
+/* ===== END ENGINE ===== */
+
+/* ===== APP ===== */
+var GL={1:'歩',2:'香',3:'桂',4:'銀',5:'金',6:'角',7:'飛',9:'と',10:'杏',11:'圭',12:'全',14:'馬',15:'龍'};
+var PN={1:'歩',2:'香',3:'桂',4:'銀',5:'金',6:'角',7:'飛',9:'と',10:'成香',11:'成桂',12:'成銀',14:'馬',15:'龍'};
+var FW='　１２３４５６７８９', KN=' 一二三四五六七八九';
+var SIDE=['▲','△'], SIDE_NAME=['先手','後手'];
+var STORE='endai-shogi-v1';
+function $(id){ return document.getElementById(id); }
+function hasCls(el,c){ return (' '+el.className+' ').indexOf(' '+c+' ')>=0; }
+function setCls(el,c,on){
+  var has=hasCls(el,c);
+  if(on&&!has) el.className+=' '+c;
+  else if(!on&&has) el.className=(' '+el.className+' ').replace(' '+c+' ',' ').replace(/^\s+|\s+$/g,'');
+}
+function upTo(el,c,stop){ while(el&&el!==stop){ if(el.className&&hasCls(el,c)) return el; el=el.parentNode; } return null; }
+
+var S={mode:'pvp',human:0,level:1,flip:false,moves:[],resign:null};
+var P={mode:'pvp',human:0,level:1};
+var pos,turn,legal,kifu,last,result,keys,sel=null,thinking=false,gameId=0,promoPending=null;
+
+function save(){ try{ localStorage.setItem(STORE,JSON.stringify(S)); }catch(e){} }
+function load(){ try{ var t=localStorage.getItem(STORE); if(t){ var o=JSON.parse(t); if(o&&o.moves&&o.moves.length!==undefined) return o; } }catch(e){} return null; }
+
+function posKey(){ return pos.b.join(',')+'|'+pos.h[0].join('')+pos.h[1].join('')+'|'+turn; }
+function notation(m,s){
+  var x=m.t%9,y=(m.t/9)|0;
+  var sq=m.t===last?'同　':FW.charAt(9-x)+KN.charAt(y+1);
+  var mk=s?'△':'▲';
+  if(m.f<0) return mk+sq+PN[m.d]+'打';
+  var k=Math.abs(pos.b[m.f]);
+  var nm=k===OU?(s?'王':'玉'):PN[k];
+  var suf='';
+  if(m.pr) suf='成';
+  else if(k<=7&&k!==KI){ var fy=(m.f/9)|0,rf=s?8-fy:fy,rt=s?8-y:y; if(rf<=2||rt<=2) suf='不成'; }
+  return mk+sq+nm+suf;
+}
+function applyMove(m){
+  var mv={f:m.f,t:m.t,d:m.d,pr:!!m.pr};
+  kifu.push(notation(mv,turn));
+  make(pos,mv,turn);
+  last=mv.t; turn=1-turn;
+  var key=posKey(); keys[key]=(keys[key]||0)+1;
+  legal=legalMoves(pos,turn);
+  if(!legal.length) result={winner:1-turn,reason:'詰み'};
+  else if(keys[key]>=4) result={winner:-1,reason:'千日手'};
+}
+function rebuild(){
+  pos=initPos(); turn=0; kifu=[]; last=-1; result=null; keys={}; sel=null;
+  keys[posKey()]=1;
+  legal=legalMoves(pos,turn);
+  for(var i=0;i<S.moves.length;i++){ if(result) break; applyMove(S.moves[i]); }
+  if(!result&&S.resign!=null) result={winner:1-S.resign,reason:'投了'};
+}
+function isCpuTurn(){ return S.mode==='cpu'&&turn!==S.human; }
+function canAct(){ return !result&&!thinking&&!isCpuTurn()&&!promoPending; }
+
+function commit(m){
+  S.moves.push({f:m.f,t:m.t,d:m.d,pr:!!m.pr});
+  applyMove(m); sel=null; save(); render(); maybeCPU();
+}
+function maybeCPU(){
+  if(S.mode!=='cpu'||result||turn===S.human) return;
+  thinking=true; render();
+  var id=gameId;
+  setTimeout(function(){
+    if(id!==gameId) return;
+    var m=think(pos,turn,legal,S.level);
+    thinking=false;
+    if(id!==gameId) return;
+    if(m) commit(m); else render();
+  },150);
+}
+
+/* --- board DOM --- */
+var grid=$('grid'), cells=[], shownFlip=null;
+function cellHandler(i){ return function(){ onCell(i); }; }
+for(var ci=0;ci<81;ci++){
+  var c=document.createElement('div');
+  c.className='cell'; c.setAttribute('role','button'); c.setAttribute('tabindex','0');
+  c.innerHTML='<span class="in"></span>';
+  c.onclick=cellHandler(ci);
+  cells.push(c);
+}
+function layoutBoard(){
+  if(shownFlip===S.flip) return; shownFlip=S.flip;
+  for(var d=0;d<81;d++) grid.appendChild(cells[S.flip?80-d:d]);
+  var f='',r='';
+  for(d=0;d<9;d++){ f+='<span>'+FW.charAt(S.flip?d+1:9-d)+'</span>'; r+='<span>'+KN.charAt(S.flip?9-d:d+1)+'</span>'; }
+  $('files').innerHTML=f; $('ranks').innerHTML=r;
+}
+function pieceHTML(q,rot){
+  var k=Math.abs(q), g=k===OU?(q>0?'玉':'王'):GL[k];
+  return '<span class="pc'+(k>8?' pro':'')+(rot?' opp':'')+'"><span class="g">'+g+'</span></span>';
+}
+function sizeUp(){
+  var w=grid.clientWidth/9; if(!w) return;
+  var fs=Math.round(Math.min(34,Math.max(12,w*0.54)));
+  $('dyn').innerHTML='.cell .pc .g,.hand .pc .g{font-size:'+fs+'px}'+
+    '.hand{width:'+Math.round(w)+'px;height:'+Math.round(w*1.09)+'px}'+
+    '.stand{min-height:'+Math.round(w*1.18+12)+'px}';
+}
+
+function render(){
+  layoutBoard();
+  var targets={}, i, m;
+  if(sel&&canAct()) for(i=0;i<legal.length;i++){ m=legal[i]; if(sel.hand?(m.f<0&&m.d===sel.k):(m.f===sel.i)) targets[m.t]=1; }
+  var chk=!result&&inCheck(pos,turn)?pos.k[turn]:-1;
+  for(i=0;i<81;i++){
+    var c=cells[i],q=pos.b[i];
+    var html=q?pieceHTML(q,(q<0)!==S.flip):'';
+    if(c.getAttribute('data-h')!==html){ c.firstChild.innerHTML=html; c.setAttribute('data-h',html); }
+    setCls(c,'last',i===last);
+    setCls(c,'sel',!!(sel&&!sel.hand&&sel.i===i));
+    setCls(c,'check',i===chk);
+    setCls(c,'hint',!!targets[i]);
+    setCls(c,'cap',!!targets[i]&&!!q);
+    c.setAttribute('aria-label',FW.charAt(9-i%9)+KN.charAt(((i/9)|0)+1)+(q?' '+(q>0?'先手':'後手')+(Math.abs(q)===OU?'玉':PN[Math.abs(q)]):''));
+  }
+  renderStand($('standTop'),S.flip?0:1,true);
+  renderStand($('standBottom'),S.flip?1:0,false);
+
+  $('stPly').innerHTML=kifu.length?kifu.length+'手目まで':'開始局面';
+  setCls($('status'),'over',!!result);
+  $('stCheck').hidden=!(chk>=0);
+  if(result){
+    $('stMark').innerHTML=result.winner<0?'＝':SIDE[result.winner];
+    $('stText').innerHTML=result.winner<0? result.reason+'で引き分け' : result.reason+'　'+SIDE_NAME[result.winner]+roleTag(result.winner,true)+'の勝ち';
+  }else{
+    $('stMark').innerHTML=SIDE[turn];
+    $('stText').innerHTML=thinking?'CPUが考えています…':SIDE_NAME[turn]+roleTag(turn,true)+'の番';
+  }
+  $('btnUndo').disabled=thinking||(!S.moves.length&&S.resign==null)||(S.mode==='cpu'&&!humanMoved());
+  $('btnResign').disabled=!!result||thinking||(S.mode==='cpu'&&isCpuTurn());
+
+  var ol=$('kifu'), h='';
+  for(i=0;i<kifu.length;i++) h+='<li'+(i===kifu.length-1?' class="cur"':'')+'><span class="no">'+(i+1)+'</span>'+kifu[i]+'</li>';
+  ol.innerHTML=h;
+  $('kifuEmpty').hidden=kifu.length>0;
+  ol.scrollTop=ol.scrollHeight;
+  renderSetup();
+  sizeUp();
+}
+function humanMoved(){ return S.moves.length>(S.human===1?1:0)||S.resign!=null; }
+function roleTag(s,paren){
+  if(S.mode!=='cpu') return '';
+  var t=s===S.human?'あなた':'CPU';
+  return paren?'（'+t+'）':t;
+}
+function renderStand(el,owner,top){
+  setCls(el,'active',!result&&turn===owner);
+  var h=pos.h[owner], items='', order7=[HI,KA,KI,GI,KE,KY,FU];
+  for(var n=0;n<order7.length;n++){
+    var k=order7[n]; if(!h[k]) continue;
+    var isSel=sel&&sel.hand&&turn===owner&&sel.k===k;
+    items+='<div class="hand'+(isSel?' sel':'')+'" role="button" data-o="'+owner+'" data-k="'+k+'" aria-label="持ち駒 '+PN[k]+' '+h[k]+'枚">'+pieceHTML(owner?-k:k,top)+(h[k]>1?'<span class="n">'+h[k]+'</span>':'')+'</div>';
+  }
+  var tag=roleTag(owner,false);
+  el.innerHTML='<div class="who"><b>'+SIDE[owner]+'</b>'+SIDE_NAME[owner]+(tag?'<span>'+tag+'</span>':'')+'</div><div class="pieces">'+(items||'<span class="empty">持ち駒なし</span>')+'</div>';
+}
+function onStand(e){
+  var h=upTo(e.target,'hand',this); if(!h) return;
+  var o=+h.getAttribute('data-o'), k=+h.getAttribute('data-k');
+  if(!canAct()||o!==turn) return;
+  sel=(sel&&sel.hand&&sel.k===k)?null:{hand:true,k:k};
+  render();
+}
+$('standTop').onclick=onStand; $('standBottom').onclick=onStand;
+
+function onCell(i){
+  if(!canAct()) return;
+  var q=pos.b[i], mine=q&&((q>0)===(turn===0));
+  if(sel){
+    var c=[];
+    for(var n=0;n<legal.length;n++){ var m=legal[n]; if(m.t===i&&(sel.hand?(m.f<0&&m.d===sel.k):m.f===sel.i)) c.push(m); }
+    if(c.length===2){ askPromo(c); return; }
+    if(c.length===1){ commit(c[0]); return; }
+  }
+  sel=(mine&&!(sel&&!sel.hand&&sel.i===i))?{i:i}:null;
+  render();
+}
+function askPromo(c){
+  promoPending=c;
+  var q=pos.b[c[0].f], sg=q>0?1:-1;
+  $('promoYesPc').innerHTML=pieceHTML(q+sg*8,false);
+  $('promoNoPc').innerHTML=pieceHTML(q,false);
+  $('promo').hidden=false;
+}
+function closePromo(pr){
+  var c=promoPending; promoPending=null; $('promo').hidden=true;
+  if(pr===null){ render(); return; }
+  for(var i=0;i<c.length;i++) if(c[i].pr===pr){ commit(c[i]); return; }
+}
+$('promoYes').onclick=function(){ closePromo(true); };
+$('promoNo').onclick=function(){ closePromo(false); };
+$('promo').onclick=function(e){ if(e.target===this) closePromo(null); };
+document.onkeydown=function(e){
+  e=e||window.event;
+  if(e.keyCode===27){ if(promoPending) closePromo(null); else if(sel){ sel=null; render(); } }
+  if((e.keyCode===13||e.keyCode===32)&&e.target&&hasCls(e.target,'cell')){ e.preventDefault(); e.target.onclick(); }
+};
+
+/* --- actions --- */
+function arm(btn,label,fn){
+  if(btn.getAttribute('data-armed')){
+    clearTimeout(+btn.getAttribute('data-armed')); btn.removeAttribute('data-armed'); setCls(btn,'armed',false);
+    btn.innerHTML=btn.getAttribute('data-label'); fn(); return;
+  }
+  btn.setAttribute('data-label',btn.innerHTML); btn.innerHTML=label; setCls(btn,'armed',true);
+  var t=setTimeout(function(){ btn.removeAttribute('data-armed'); setCls(btn,'armed',false); btn.innerHTML=btn.getAttribute('data-label'); },3000);
+  btn.setAttribute('data-armed',String(t));
+}
+$('btnUndo').onclick=function(){
+  if(thinking) return;
+  if(S.resign!=null){ S.resign=null; }
+  else if(S.mode==='cpu'){
+    if(!S.moves.length) return;
+    S.moves.pop();
+    while(S.moves.length&&S.moves.length%2!==S.human) S.moves.pop();
+  } else S.moves.pop();
+  gameId++; rebuild(); save(); render(); maybeCPU();
+};
+$('btnFlip').onclick=function(){ S.flip=!S.flip; save(); render(); };
+$('btnResign').onclick=function(){
+  arm(this,'本当に投了する',function(){
+    if(result) return;
+    S.resign=S.mode==='cpu'?S.human:turn; gameId++; thinking=false;
+    rebuild(); save(); render();
+  });
+};
+function startNew(){
+  gameId++; thinking=false;
+  S={mode:P.mode,human:P.human,level:P.level,flip:P.mode==='cpu'&&P.human===1,moves:[],resign:null};
+  $('kifuText').hidden=true;
+  rebuild(); save(); render(); maybeCPU();
+}
+$('btnNew').onclick=function(){
+  if(S.moves.length>0&&!result) arm(this,'対局中です。新しく始める',startNew); else startNew();
+};
+function bindSeg(id,key,num){
+  $(id).onclick=function(e){
+    var b=e.target; while(b&&b.tagName!=='BUTTON'&&b!==this) b=b.parentNode;
+    if(!b||b===this) return;
+    var v=b.getAttribute('data-v'); P[key]=num?+v:v;
+    if(!S.moves.length&&S.resign==null) startNew(); else renderSetup();
+  };
+}
+bindSeg('segMode','mode',false); bindSeg('segHuman','human',true); bindSeg('segLevel','level',true);
+function renderSetup(){
+  var segs=[['segMode','mode'],['segHuman','human'],['segLevel','level']];
+  for(var n=0;n<segs.length;n++){
+    var bs=$(segs[n][0]).getElementsByTagName('button');
+    for(var j=0;j<bs.length;j++){ var on=bs[j].getAttribute('data-v')===String(P[segs[n][1]]); setCls(bs[j],'on',on); bs[j].setAttribute('aria-pressed',on?'true':'false'); }
+  }
+  $('fHuman').hidden=$('fLevel').hidden=P.mode!=='cpu';
+  $('pendingNote').hidden=P.mode===S.mode&&(P.mode!=='cpu'||(P.human===S.human&&P.level===S.level));
+}
+var toastT=null;
+function toast(t){ var el=$('toast'); el.innerHTML=t; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(function(){ el.hidden=true; },2200); }
+function pad4(n){ n=String(n); while(n.length<4) n=' '+n; return n; }
+$('btnCopy').onclick=function(){
+  if(!kifu.length){ toast('まだ指し手がありません'); return; }
+  var head=S.mode==='cpu'?'先手：'+(S.human===0?'あなた':'CPU')+'\n後手：'+(S.human===1?'あなた':'CPU')+'\n':'先手：\n後手：\n';
+  var lines=[]; for(var i=0;i<kifu.length;i++) lines.push(pad4(i+1)+' '+kifu[i]);
+  var txt=head+'手数----指手---------\n'+lines.join('\n');
+  if(result) txt+='\nまで'+kifu.length+'手で'+(result.winner<0?result.reason:SIDE_NAME[result.winner]+'の勝ち（'+result.reason+'）');
+  var ta=$('kifuText');
+  function fallback(){
+    ta.value=txt; ta.hidden=false;
+    var ok=false;
+    try{ ta.focus(); ta.select(); ta.setSelectionRange(0,txt.length); ok=document.execCommand('copy'); }catch(e){}
+    if(ok){ ta.hidden=true; toast('棋譜をコピーしました'); }
+    else toast('下の欄を長押ししてコピーしてください');
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    try{ navigator.clipboard.writeText(txt).then(function(){ ta.hidden=true; toast('棋譜をコピーしました'); },fallback); }catch(e){ fallback(); }
+  } else fallback();
+};
+
+/* --- boot --- */
+var hot=window.claude&&window.claude.hot;
+if(hot&&hot.snapshot) hot.snapshot(function(){ return {S:S,P:P}; });
+function start(data){
+  var saved=data&&data.S?data.S:load();
+  if(saved){
+    var d={mode:'pvp',human:0,level:1,flip:false,moves:[],resign:null};
+    for(var k in d) if(saved[k]!==undefined) d[k]=saved[k];
+    S=d;
+  }
+  P={mode:S.mode,human:S.human,level:S.level};
+  if(data&&data.P) P=data.P;
+  try{ rebuild(); }catch(e){ S.moves=[]; S.resign=null; rebuild(); }
+  render(); maybeCPU();
+}
+var rsT=null;
+function onResize(){ clearTimeout(rsT); rsT=setTimeout(sizeUp,100); }
+window.addEventListener('resize',onResize,false);
+window.addEventListener('orientationchange',onResize,false);
+window.addEventListener('load',sizeUp,false);
+if(hot&&hot.ready) hot.ready(start); else start((hot&&hot.data)||{});
+</script>
+</body>
+</html>
