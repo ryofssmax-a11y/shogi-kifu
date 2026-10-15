@@ -53,7 +53,11 @@ async function decide(key,now){const waitHand=()=>{if(!AUTO.blockedSince)AUTO.bl
    const v=$('#avid'),cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);
    const prev=st.corners.map(([a,b])=>[a*cv.width,b*cv.height]),g=await GridDetect.auto(cv,{prev});AUTO.log.push('redetect:'+(g.conf||0).toFixed(2));
    if(g.ok&&g.conf>=.5){const old=st.corners;st.corners=g.corners.map(([a,b])=>[a/cv.width,b/cv.height]);const f=frame(400),k2=V.rectify(f.img,f.C,270),n2=strongCells(V.cellDiff(AUTO.ref,k2)).length;
-    if(n2<=8){save();AUTO.prev=null;toast('盤のずれを検出して、マス目を合わせ直しました');AUTO.log.push('regrid:'+n2);AUTO.redetected=true;try{return await decide(k2,now);}finally{AUTO.redetected=false;}}
+    if(n2<=8){save();AUTO.prev=null;toast('盤のずれを検出して、マス目を合わせ直しました');AUTO.log.push('regrid:'+n2);
+     // 位置合わせのわずかな差で数マス変化して見えることがある → 駒の認識で今の局面と一致すれば「指していない」とみなして基準を更新
+     if(n2&&window.Recog){try{const P=pos(),cl=await Recog.classify(V.rectify(f.img,f.C,360)),mis=cl.filter(x=>x.best!==Recog.clsOf(P.b[Math.floor(x.cell/9)][x.cell%9])).length;AUTO.log.push('regrid-mis:'+mis);
+      if(mis<=1){AUTO.ref=k2;AUTO.state='stable';badge('待機中','');return;}}catch(e){}}
+     AUTO.redetected=true;try{return await decide(k2,now);}finally{AUTO.redetected=false;}}
     st.corners=old;}}
   AUTO.paused=true;badge('盤がずれた？','ask');AUTO.log.push('moved');
   chips(`${strong.length}マスが変化しました。盤やカメラが動いた可能性があります。`,[],key,true);return;}
