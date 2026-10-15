@@ -47,7 +47,7 @@ function checkResult(){const N=game.moves.length,p=ps[N];
   if(chk[0]!==chk[1])return{winner:chk[0]?1:0,reason:'連続王手'};return{winner:null,reason:'千日手'};}
  return null;}
 // ---------- 時計 ----------
-function clockStart(){const ck=PLAY.clock;if(!ck)return;ck.side=pos().turn;ck.t0=performance.now();}
+function clockStart(side){const ck=PLAY.clock;if(!ck)return;ck.side=side==null?pos().turn:side;ck.t0=performance.now();}
 function clockStop(){const ck=PLAY.clock;if(!ck||ck.side==null)return true;const used=performance.now()-ck.t0,o=ck.side;ck.side=null;
  if(ck.rem[o]>0){ck.rem[o]-=used;if(ck.rem[o]<0){if(-ck.rem[o]>ck.byo){ck.rem[o]=0;return false;}ck.rem[o]=0;}}else if(used>ck.byo)return false;return true;}
 function clockLeft(o){const ck=PLAY.clock;let r=ck.rem[o],b=ck.byo;if(ck.side===o){const u=performance.now()-ck.t0;if(r>0){r-=u;if(r<0){b+=r;r=0;}}else b-=u;}return{r,b};}
@@ -55,6 +55,8 @@ const fmt=ms=>{ms=Math.max(0,ms);const s=Math.ceil(ms/1000);return Math.floor(s/
 setInterval(()=>{if(!PLAY.on||PLAY.result||!PLAY.clock)return;for(const o of[0,1]){const el=$('#pc'+o);const{r,b}=clockLeft(o);if(PLAY.clock.side===o&&r<=0&&b<=0){finish({winner:1-o,reason:'切れ負け'});return;}if(!el)continue;
  el.textContent=(r>0?fmt(r):'秒読み '+Math.max(0,Math.ceil(b/1000)))+'';el.classList.toggle('on',PLAY.clock.side===o);el.classList.toggle('low',r<=0&&b<10000);
  if(PLAY.clock.side===o&&r<=0&&b<=0){finish({winner:1-o,reason:'切れ負け'});}}},200);
+function tapClock(o){if(!PLAY.on||PLAY.result||!PLAY.clock)return;const ck=PLAY.clock;
+ if(ck.side==null){clockStart(1-o);paintBar();return;}if(ck.side!==o)return;if(!clockStop()){finish({winner:1-o,reason:'切れ負け'});return;}clockStart(1-o);paintBar();}
 // ---------- 進行 ----------
 const _commit=commit;
 commit=async function(m,photo){
@@ -65,9 +67,10 @@ commit=async function(m,photo){
   await _commit(m,photo);afterMove(false);return;}
  return _commit(m,photo);};
 async function afterMove(byEngine){if(!PLAY.on||PLAY.result)return;
- if(!clockStop()){finish({winner:1-ps[game.moves.length-1].turn,reason:'切れ負け'});return;}
+ const tapMode=PLAY.opt.mode==='human'&&PLAY.opt.clockSwitch==='tap'&&PLAY.clock;
+ if(!tapMode&&!clockStop()){finish({winner:1-ps[game.moves.length-1].turn,reason:'切れ負け'});return;}
  PLAY.hint=null;const r=checkResult();if(r){finish(r);return;}
- clockStart();paintBar();if(pos().turn===eng())engineTurn();}
+ if(!tapMode)clockStart();paintBar();if(pos().turn===eng())engineTurn();}
 async function engineTurn(){const gen=++PLAY.gen,lv=PLAY.opt.level,ply=game.moves.length,p=ps[ply],t0=performance.now();
  if(canDeclare(p,eng())){finish({winner:eng(),reason:'入玉宣言'});return;}
  PLAY.thinking=true;paintBar();$('#chara').classList.add('think');say('うーん、考え中…');
@@ -90,37 +93,37 @@ function showAwait(){const sb=$('#shBody');if(!sb||!$('#avid'))return;let el=$('
 const _legalNow=legalNow;legalNow=function(){const l=_legalNow();if(PLAY.on&&PLAY.await&&window.AUTO&&AUTO.on)return l.filter(m=>sameMove(m,PLAY.await));return l;};
 function finish(r){if(PLAY.result)return;PLAY.gen++;stopSearch();PLAY.thinking=false;PLAY.await=null;$('#chara').classList.remove('think');
  if(PLAY.clock)PLAY.clock.side=null;PLAY.result=r;game.result=r;save();
- const ho=game.handicap!=='平手',you=1-eng(),txt=r.winner==null?'千日手（引き分け）':(r.winner===you?'あなたの勝ち':'やねうら王の勝ち');
- const why={'詰み':'詰み','投了':r.winner===you?'やねうら王が投了':'あなたが投了','千日手':'同一局面4回','連続王手':'連続王手の千日手','入玉宣言':'入玉宣言','切れ負け':'時間切れ'}[r.reason];
- render();paintBar();say(r.winner===you?'やったね！勝ちだよ🎉':r.winner==null?'引き分け！いい勝負だったね':'残念…次は勝とう！',true);
+ const ho=game.handicap!=='平手',hum=PLAY.opt.mode==='human',you=hum?-9:1-eng(),pn=o=>(o?(ho?'△上手 ':'△後手 '):(ho?'▲下手 ':'▲先手 '))+(o?game.white:game.black),txt=r.winner==null?'千日手（引き分け）':hum?pn(r.winner)+' の勝ち':(r.winner===you?'あなたの勝ち':'やねうら王の勝ち');
+ const why={'詰み':'詰み','投了':hum?pn(1-r.winner)+' が投了':r.winner===you?'やねうら王が投了':'あなたが投了','千日手':'同一局面4回','連続王手':'連続王手の千日手','入玉宣言':'入玉宣言','切れ負け':'時間切れ'}[r.reason];
+ render();paintBar();say(hum?(r.winner==null?'引き分け！':`${pn(r.winner)}の勝ち！おつかれさま`):r.winner===you?'やったね！勝ちだよ🎉':r.winner==null?'引き分け！いい勝負だったね':'残念…次は勝とう！',true);
  openSheet('対局終了',`<p style="font-size:20px"><b>${txt}</b>（${why}・${game.moves.length}手）</p><p class="hint">棋譜は通常の対局として保存されました（KIF に対局者名と結果が入ります）。</p>
  <div class="row"><button class="pri" id="peAna">📈 全体を解析</button><button id="peNew">もう一局</button></div><div class="row"><button id="peClose">閉じる</button></div>`);
  $('#peAna').onclick=()=>{closeSheet();PLAY.on=false;paintBar();KT.open=true;$('#kento').classList.remove('hidden');paint().then(()=>analyzeGame());};
  $('#peNew').onclick=()=>openPlay();$('#peClose').onclick=closeSheet;}
 // ---------- 操作 ----------
-function matta(){if(!PLAY.on||PLAY.result)return;PLAY.gen++;stopSearch();PLAY.thinking=false;PLAY.await=null;$('#chara').classList.remove('think');
+function matta(){if(!PLAY.on||PLAY.result)return;if(PLAY.opt.mode==='human'){if(!game.moves.length)return;if(!confirm('待ったをしますか？（1手戻します）'))return;const k=game.moves.length;game.moves.pop();if(game.photos.includes(k)){idb.del(game.id+':'+k);game.photos=game.photos.filter(x=>x!==k);delete refImgs[k];}ps=S.positions(game.handicap,game.moves,game.start);view=game.moves.length;save();sel=null;changed=[];PLAY.hint=null;render();if(PLAY.clock)clockStart();paintBar();toast('待った（1手戻しました）');if(PLAY.opt.camera&&window.AUTO)AUTO.ref=null;return;}PLAY.gen++;stopSearch();PLAY.thinking=false;PLAY.await=null;$('#chara').classList.remove('think');
  const you=1-eng();let n=0;const pop=()=>{const k=game.moves.length;game.moves.pop();if(game.photos.includes(k)){idb.del(game.id+':'+k);game.photos=game.photos.filter(x=>x!==k);delete refImgs[k];}ps=S.positions(game.handicap,game.moves,game.start);view=game.moves.length;n++;};
  if(game.moves.length)pop();while(game.moves.length&&pos().turn!==you)pop();
  if(pos().turn!==you){save();sel=null;render();clockStart();paintBar();engineTurn();return;}
  PLAY.lowCount=0;save();sel=null;changed=[];render();if(PLAY.clock)clockStart();paintBar();toast(`待った（${n}手戻しました）`);say('待ったね。じっくり考えよう');
  if(PLAY.opt.camera&&window.AUTO){AUTO.ref=null;toast('実際の盤も戻してください（静止した盤面を新しい基準にします）');}}
-async function hint(){if(!PLAY.on||PLAY.result||PLAY.thinking||pos().turn===eng())return;const gen=PLAY.gen,ply=game.moves.length;$('#pHint').disabled=true;say('ヒントを考え中…');
+async function hint(){if(!PLAY.on||PLAY.result||PLAY.thinking||pos().turn===eng()||!KT.ready)return;const gen=PLAY.gen,ply=game.moves.length;$('#pHint').disabled=true;say('ヒントを考え中…');
  const info=await new Promise(res=>search({ply,multipv:1,go:'go btime 0 wtime 0 byoyomi 1000',done:i=>res(i)}));$('#pHint')&&($('#pHint').disabled=false);
  if(gen!==PLAY.gen||ply!==game.moves.length||!info[1])return;const m=S.legal(pos()).find(x=>usi(x)===info[1].pv[0]);if(!m)return;
  PLAY.hint=m;PLAY.hints=(PLAY.hints||0)+1;render();const t=S.notation(pos(),m,game.moves[ply-1]);say(`ヒント: ${t} はどう？`,true);toast('ヒント: '+t);}
-function resign(){if(!PLAY.on||PLAY.result)return;if(!confirm('投了しますか？'))return;finish({winner:eng(),reason:'投了'});}
-function declare(){if(!PLAY.on||PLAY.result)return;const you=1-eng();if(pos().turn!==you){toast('自分の手番で宣言してください');return;}
+function resign(side){if(!PLAY.on||PLAY.result)return;if(PLAY.opt.mode==='human'){if(side==null)side=pos().turn;const nm=side?game.white:game.black;if(!confirm(`${side?'△':'▲'}${nm} が投了しますか？`))return;finish({winner:1-side,reason:'投了'});return;}if(!confirm('投了しますか？'))return;finish({winner:eng(),reason:'投了'});}
+function declare(){if(!PLAY.on||PLAY.result)return;const you=PLAY.opt.mode==='human'?pos().turn:1-eng();if(pos().turn!==you){toast('自分の手番で宣言してください');return;}
  if(canDeclare(pos(),you))finish({winner:you,reason:'入玉宣言'});else toast('入玉宣言の条件を満たしていません（玉が敵陣・敵陣に10枚以上・点数 先手28/後手27以上・王手されていない）');}
-window.playOps={matta,hint,resign,declare,checkResult,canDeclare,finish};
+window.playOps={tapClock,matta,hint,resign,declare,checkResult,canDeclare,finish};
 // ヒントのマスを強調
-const _render2=render;render=function(){_render2();const h=PLAY.hint;if(h&&PLAY.on){document.querySelectorAll('#board .cell').forEach(c=>{const r=+c.dataset.r,cc=+c.dataset.c;if((!h.drop&&r===h.fr&&cc===h.fc)||(r===h.tr&&cc===h.tc))c.classList.add('hint');});}};
+const _render2=render;render=function(){_render2();if(PLAY.on&&PLAY.opt){$('#gInfo').textContent=PLAY.opt.mode==='human'?`👥 対面対局・${game.handicap}・${game.moves.length}手`:`🤖 Lv.${PLAY.opt.level} ${LEVELS[PLAY.opt.level-1].n}・${game.handicap}・${game.moves.length}手`;}const h=PLAY.hint;if(h&&PLAY.on){document.querySelectorAll('#board .cell').forEach(c=>{const r=+c.dataset.r,cc=+c.dataset.c;if((!h.drop&&r===h.fr&&cc===h.fc)||(r===h.tr&&cc===h.tc))c.classList.add('hint');});}};
 // ---------- 画面 ----------
-$('.nav').insertAdjacentHTML('beforeend','<button id="bPlay" aria-label="AIと対局">⚔️</button>');
-$('.nav').insertAdjacentHTML('afterend','<div id="playbar" class="playbar hidden"></div>');
+$('.nav').insertAdjacentHTML('beforeend','<button id="bPlay" aria-label="対局">⚔️</button>');
+$('.nav').insertAdjacentHTML('afterend','<div id="playbar" class="playbar hidden"></div>');$('#hand1').insertAdjacentHTML('beforebegin','<div id="playtop" class="playtop hidden"></div>');
 $('#bPlay').onclick=()=>openPlay();
 // 盤の高さ = 画面の高さ − (ヘッダ・持ち駒・筋の数字・操作バー・フッタ) を実測して決める
 function fitBoard(){if(!document.body.classList.contains('playing'))return;const hh=s=>{const e=document.querySelector(s);if(!e)return 0;const cs=getComputedStyle(e);return e.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);};
- const used=hh('header')+hh('#hand1')+hh('#hand0')+hh('#files')+hh('#playbar')+hh('footer')+10,avail=innerHeight-used,wb=(innerWidth-38)*1.09;
+ const used=hh('header')+hh('#playtop')+hh('#hand1')+hh('#hand0')+hh('#files')+hh('#playbar')+hh('footer')+10,avail=innerHeight-used,wb=(innerWidth-38)*1.09;
  let bh=Math.max(200,Math.min(wb,avail,540));document.body.style.setProperty('--bh',bh+'px');
  const pb=$('#playbar').getBoundingClientRect(),over=$('#hand0').getBoundingClientRect().bottom+3-pb.top;if(over>0){bh=Math.max(200,bh-over);document.body.style.setProperty('--bh',bh+'px');}
  // キャラ: 持ち駒（下）と操作バーの間に空きがあればそこへ、なければ隠す
@@ -128,30 +131,57 @@ function fitBoard(){if(!document.body.classList.contains('playing'))return;const
  if(gap>=50){ch.style.cssText=`display:flex;top:auto;bottom:${innerHeight-pb.top+6}px;right:12px;transform:scale(${Math.min(.75,(gap-4)/52)});transform-origin:100% 100%`;ch.classList.add('pfit');}else{ch.style.cssText='';ch.classList.remove('pfit');}}
 addEventListener('resize',()=>setTimeout(fitBoard,50));
 function paintBar(){const el=$('#playbar');setTimeout(()=>{const on=PLAY.on&&!el.classList.contains('hidden');document.body.classList.toggle('playing',on);if(!on){document.body.style.removeProperty('--bh');$('#chara').style.cssText='';$('#chara').classList.remove('pfit');}if(on){document.documentElement.style.setProperty('--pbh',el.offsetHeight+'px');fitBoard();}},0);if(!PLAY.on&&!PLAY.result){el.classList.add('hidden');return;}el.classList.toggle('hidden',!PLAY.on);if(!PLAY.on)return;
- const e=eng(),ho=game.handicap!=='平手',nm=o=>o===e?`🤖 ${lvName(PLAY.opt.level)}`:'🙂 あなた',mk=o=>o?'△':'▲';
+ const top=$('#playtop');top.classList.toggle('hidden',!(PLAY.on&&PLAY.opt.mode==='human'));
+ if(PLAY.opt.mode==='human'){const ho=game.handicap!=='平手',lab=o=>(o?'△':'▲')+(o?game.white:game.black),turn=pos().turn,ck=PLAY.clock;
+  const cbtn=o=>`<button class="pclock${!PLAY.result&&(ck?ck.side===o:turn===o)?' on':''}" id="pcb${o}"><span class="pnm">${lab(o)}${turn===o&&!PLAY.result?' の番':''}</span>${ck?`<b class="pclk" id="pc${o}"></b>`:''}</button>`;
+  top.className='playtop'+(PLAY.opt.face?' face':'');top.innerHTML=`<div class="row">${cbtn(1)}<button class="sm" id="pRes1">投了</button></div>`;el.classList.add('hu');
+  el.innerHTML=`<div class="row">${cbtn(0)}<button class="sm" id="pMatta">↶待った</button>${PLAY.opt.hints?'<button class="sm" id="pHint">💡</button>':''}<button class="sm" id="pDecl">宣言</button><button class="sm" id="pRes0">投了</button></div>`;
+  for(const o of[0,1]){$('#pcb'+o).onclick=()=>tapClock(o);$('#pRes'+o).onclick=()=>resign(o);}
+  $('#pMatta').onclick=matta;$('#pDecl').onclick=declare;if($('#pHint'))$('#pHint').onclick=hint;
+  document.querySelectorAll('#playbar button,#playtop button').forEach(b=>b.disabled=!!PLAY.result);return;}
+ el.classList.remove('hu');const e=eng(),ho=game.handicap!=='平手',nm=o=>o===e?`🤖 ${lvName(PLAY.opt.level)}`:'🙂 あなた',mk=o=>o?'△':'▲';
  const st_=PLAY.result?'終局':PLAY.thinking?'<span class="spin"></span> やねうら王が考え中…':PLAY.await?`盤で「${PLAY.awaitTxt}」を指してください`:pos().turn===e?'やねうら王の番':'あなたの番です';
  el.innerHTML=`<div class="prow"><span>${mk(1)} ${nm(1)}</span>${PLAY.clock?'<b class="pclk" id="pc1"></b>':''}</div><div class="prow"><span>${mk(0)} ${nm(0)}</span>${PLAY.clock?'<b class="pclk" id="pc0"></b>':''}</div>
  <div class="pst" id="pSt">${st_}</div><div class="row"><button id="pMatta">↶ 待った</button><button id="pHint">💡 ヒント</button><button id="pDecl">入玉宣言</button><button id="pResign">🏳 投了</button></div>`;
  $('#pMatta').onclick=matta;$('#pHint').onclick=hint;$('#pResign').onclick=resign;$('#pDecl').onclick=declare;
  const busy=!!PLAY.result;['pMatta','pHint','pResign','pDecl'].forEach(i=>$('#'+i).disabled=busy);if(PLAY.thinking||pos().turn===e)$('#pHint').disabled=true;
  if($('#avid'))showAwait();}
-async function openPlay(){const o=st.playOpt||{side:'sente',h:'平手',level:3,think:3000,resign:2500,main:0,byo:0,camera:false,voice:false};
+async function openPlay(){const o={mode:'ai',side:'sente',h:'平手',level:3,think:3000,resign:2500,main:0,byo:0,camera:false,voice:false,bName:'',wName:'',clockSwitch:'auto',face:true,hints:false,...(st.playOpt||{})};
  const ok=self.crossOriginIsolated&&await evalCached();
- openSheet('AIと対局（対局モード）',`${ok?'':`<p class="hint" style="color:var(--acc)">対局にはAIエンジン（約9MB）が必要です。🧠 AI検討からダウンロードしてください。</p><button id="pDl" style="width:100%">🧠 AI検討を開いてダウンロード</button>`}
- <label>手番</label><select id="poSide"><option value="sente">先手（下手）で指す</option><option value="gote">後手（上手）で指す</option><option value="furi">振り駒で決める</option></select>
- <label>手合割</label><select id="poH">${S.HANDICAPS.map(h=>`<option>${h}</option>`).join('')}</select>
- <label>強さ</label><select id="poLv">${LEVELS.map((L,i)=>`<option value="${i+1}">Lv.${i+1} ${L.n}</option>`).join('')}</select>
- <label>思考時間（Lv.8〜10）</label><select id="poT">${[[1000,'1秒'],[3000,'3秒'],[5000,'5秒'],[10000,'10秒']].map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>
- <label>AIの投了</label><select id="poR">${[[0,'投了しない（詰むまで指す）'],[1500,'評価値 −1500 で投了'],[2500,'評価値 −2500 で投了'],[4000,'評価値 −4000 で投了']].map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>
- <label>対局時計</label><div class="row"><select id="poMain">${[[0,'持ち時間なし'],[1,'1分'],[5,'5分'],[10,'10分'],[30,'30分']].map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select><select id="poByo">${[[0,'秒読みなし'],[10,'秒読み10秒'],[30,'秒読み30秒'],[60,'秒読み60秒']].map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></div>
- <label class="chk"><input type="checkbox" id="poCam"> 実際の盤で指す（カメラの自動記録で手を検出。AIの手は読み上げるので盤に並べてください）</label>
- <label class="chk"><input type="checkbox" id="poVoice"> AIの手を読み上げる</label>
- <button class="pri" id="poGo" style="width:100%;min-height:56px" ${ok?'':'disabled'}>対局開始</button>
- <p class="hint">強さは探索量の制限と「わざと少し損な手を選ぶ」ランダム性で調整しています（Lv.1〜7: 探索ノード数、Lv.8〜10: 思考時間）。待った・ヒントはいつでも使えます。</p>`);
- $('#poSide').value=o.side;$('#poH').value=o.h;$('#poLv').value=o.level;$('#poT').value=o.think;$('#poR').value=o.resign;$('#poMain').value=o.main;$('#poByo').value=o.byo;$('#poCam').checked=o.camera;$('#poVoice').checked=o.voice;
+ const sel=(id,opts,v)=>`<select id="${id}">${opts.map(([x,t])=>`<option value="${x}"${String(x)===String(v)?' selected':''}>${t}</option>`).join('')}</select>`;
+ openSheet('対局',`<div class="seg" id="poMode"><button data-m="ai">🤖 やねうら王と対局</button><button data-m="human">👥 人と対局（対面）</button></div>
+ <div id="secAI">${ok?'':`<p class="hint" style="color:var(--acc)">AIとの対局にはAIエンジン（約9MB）が必要です。</p><button id="pDl" style="width:100%">🧠 AI検討を開いてダウンロード</button>`}
+  <div class="lvbox"><div class="lvh">AIの強さ <b id="lvNow"></b></div><div class="lvgrid">${LEVELS.map((L,i)=>`<button data-lv="${i+1}"><b>${i+1}</b><small>${L.n}</small></button>`).join('')}</div></div>
+  <label>手番</label>${sel('poSide',[['sente','先手（下手）で指す'],['gote','後手（上手）で指す'],['furi','振り駒で決める']],o.side)}
+  <label>思考時間（Lv.8〜10）</label>${sel('poT',[[1000,'1秒'],[3000,'3秒'],[5000,'5秒'],[10000,'10秒']],o.think)}
+  <label>AIの投了</label>${sel('poR',[[0,'投了しない（詰むまで指す）'],[1500,'評価値 −1500 で投了'],[2500,'評価値 −2500 で投了'],[4000,'評価値 −4000 で投了']],o.resign)}
+  <label class="chk"><input type="checkbox" id="poVoice"${o.voice?' checked':''}> AIの手を読み上げる</label></div>
+ <div id="secHU"><label>対局者の名前</label><div class="row"><input type="text" id="poBN" placeholder="先手（下手）" value="${o.bName}"><input type="text" id="poWN" placeholder="後手（上手）" value="${o.wName}"></div>
+  <label>時計の切り替え</label>${sel('poSw',[['auto','指したら自動で切り替え'],['tap','自分の時計ボタンを押して切り替え']],o.clockSwitch)}
+  <label class="chk"><input type="checkbox" id="poFace"${o.face?' checked':''}> 対面モード（上側の時計・ボタンを180°回転）</label>
+  <label class="chk"><input type="checkbox" id="poHint"${o.hints?' checked':''}> AIのヒントを使えるようにする（AIエンジンが必要）</label></div>
+ <label>手合割</label>${sel('poH',S.HANDICAPS.map(h=>[h,h]),o.h)}
+ <label>対局時計</label><div class="row">${sel('poMain',[[0,'持ち時間なし'],[1,'1分'],[5,'5分'],[10,'10分'],[30,'30分']],o.main)}${sel('poByo',[[0,'秒読みなし'],[10,'秒読み10秒'],[30,'秒読み30秒'],[60,'秒読み60秒']],o.byo)}</div>
+ <label class="chk"><input type="checkbox" id="poCam"${o.camera?' checked':''}> 実際の盤で指す（カメラの自動記録で手を検出して記録）</label>
+ <button class="pri" id="poGo" style="width:100%;min-height:56px">対局開始</button>
+ <p class="hint" id="poNote"></p>`);
+ let mode=o.mode,lv=o.level;
+ const upd=()=>{document.querySelectorAll('#poMode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));$('#secAI').classList.toggle('hidden',mode!=='ai');$('#secHU').classList.toggle('hidden',mode!=='human');
+  document.querySelectorAll('.lvgrid button').forEach(b=>b.classList.toggle('on',+b.dataset.lv===lv));$('#lvNow').textContent=`Lv.${lv} ${LEVELS[lv-1].n}`;
+  $('#poGo').disabled=mode==='ai'&&!ok;$('#poGo').textContent=mode==='ai'?`やねうら王 Lv.${lv} と対局開始`:'対局開始（対面）';
+  $('#poNote').textContent=mode==='ai'?'強さは探索量の制限と「わざと少し損な手を選ぶ」ランダム性で調整しています（Lv.1〜7: 探索ノード数、Lv.8〜10: 思考時間）。':'1台のスマホを2人で使います。盤をタップして交互に指してください。対局後は📈全体を解析で振り返れます。';};
+ document.querySelectorAll('#poMode button').forEach(b=>b.onclick=()=>{mode=b.dataset.m;upd();});document.querySelectorAll('.lvgrid button').forEach(b=>b.onclick=()=>{lv=+b.dataset.lv;upd();});upd();
  if($('#pDl'))$('#pDl').onclick=()=>{closeSheet();KT.open=true;$('#kento').classList.remove('hidden');paint();};
- $('#poGo').onclick=async()=>{const v={side:$('#poSide').value,h:$('#poH').value,level:+$('#poLv').value,think:+$('#poT').value,resign:+$('#poR').value,main:+$('#poMain').value,byo:+$('#poByo').value,camera:$('#poCam').checked,voice:$('#poVoice').checked};st.playOpt=v;save();await startPlay(v);};}
-async function startPlay(v){let side=v.side;if(side==='furi'){const tosses=[...Array(5)].map(()=>Math.random()<.5);side=tosses.filter(Boolean).length>=3?'sente':'gote';toast(`振り駒: 歩が${tosses.filter(Boolean).length}枚 → あなたは${side==='sente'?'先手':'後手'}`);}
+ $('#poGo').onclick=async()=>{const v={mode,level:lv,side:$('#poSide').value,h:$('#poH').value,think:+$('#poT').value,resign:+$('#poR').value,main:+$('#poMain').value,byo:+$('#poByo').value,camera:$('#poCam').checked,voice:$('#poVoice').checked,
+  bName:$('#poBN').value.trim(),wName:$('#poWN').value.trim(),clockSwitch:$('#poSw').value,face:$('#poFace').checked,hints:$('#poHint').checked};st.playOpt=v;save();await startPlay(v);};}
+async function startPlay(v){v={mode:'ai',...v};
+ if(v.mode==='human'){closeSheet();if(v.hints&&!KT.ready&&self.crossOriginIsolated&&await evalCached()){try{await startEngine();}catch(e){}}
+  KT.on=false;KT.open=false;$('#kento').classList.add('hidden');stopSearch();st.flip=false;
+  const ho=v.h!=='平手';newGame(v.h,v.bName||(ho?'下手':'先手'),v.wName||(ho?'上手':'後手'));game.vsHuman=true;
+  PLAY.on=true;PLAY.result=null;PLAY.gen++;PLAY.hint=null;PLAY.await=null;PLAY.opt={...v,engineSide:-1};
+  PLAY.clock=(v.main||v.byo)?{rem:[v.main*60000,v.main*60000],byo:v.byo*1000,side:null}:null;save();
+  say('対局開始！よろしくお願いします',true);clockStart();paintBar();render();if(v.camera){await openAuto();}return;}
+ let side=v.side;if(side==='furi'){const tosses=[...Array(5)].map(()=>Math.random()<.5);side=tosses.filter(Boolean).length>=3?'sente':'gote';toast(`振り駒: 歩が${tosses.filter(Boolean).length}枚 → あなたは${side==='sente'?'先手':'後手'}`);}
  const you=side==='sente'?0:1;closeSheet();
  if(!KT.ready){$('#playbar').classList.remove('hidden');$('#playbar').innerHTML='<p class="hint">エンジンを起動しています…</p>';try{await startEngine();}catch(e){toast('エンジンを起動できませんでした: '+e.message);return;}}
  KT.on=false;KT.open=false;$('#kento').classList.add('hidden');stopSearch();

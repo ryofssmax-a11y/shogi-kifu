@@ -108,3 +108,13 @@ body.playing .chara.pfit .bubble{right:100%;bottom:10px}
 body.playing .ranks{height:var(--bh);max-height:none}
 body.playing .boardwrap,body.playing .hand{width:calc(var(--bh) / 1.09 + 22px)}
 body.playing .cell{font-size:calc(var(--bh) / 9 * .56)}
+.seg{display:flex;gap:6px;margin-bottom:10px}.seg button{flex:1;min-height:52px;font-size:15px;font-weight:700}.seg button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.lvbox{border:2px solid var(--acc);border-radius:14px;padding:10px;margin:6px 0 4px}.lvh{font-size:18px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}.lvh b{color:var(--acc);font-size:16px}
+.lvgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.lvgrid button{min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px}.lvgrid button b{font-size:20px}.lvgrid button small{font-size:10px}
+.lvgrid button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.playtop{margin:4px auto;padding:4px 6px;border-radius:12px;background:var(--card);border:1px solid var(--bd);box-sizing:border-box}.playtop.face{transform:rotate(180deg)}
+.pclock{flex:1;display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:4px 12px;font-size:15px;font-weight:700}.pclock.on{background:var(--acc);color:#fff;border-color:var(--acc)}.pclock .pclk{font-size:20px;background:none!important;color:inherit}
+.playtop .sm,.playbar .sm{flex:0 0 64px;font-size:13px}
+body.playing .playtop{width:calc(var(--bh) / 1.09 + 22px);max-width:100%}
+.playbar.hu .row,.playtop .row{gap:4px;margin:0}.playbar.hu .sm,.playtop .sm{flex:0 0 auto;min-width:46px;padding:0 6px;min-height:48px}
+.playbar.hu .pclock,.playtop .pclock{min-width:0;padding:4px 8px}.pclock .pnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
