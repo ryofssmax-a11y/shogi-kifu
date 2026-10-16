@@ -1,0 +1,13 @@
+{
+  "name": "shogi-kifu",
+  "private": true,
+  "description": "将棋カメラ棋譜（ビルド不要の静的サイト。package.json はテスト用のみ）",
+  "scripts": {
+    "serve": "python -m http.server 8765",
+    "test:engine": "node tests/engine.js",
+    "test": "node tests/test.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

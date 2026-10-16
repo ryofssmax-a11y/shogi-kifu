@@ -1,4 +1,4 @@
-require('/workspace/shogi-kifu-app/shogi.js');const S=globalThis.Shogi;let ok=0,ng=0;
+require(__dirname+'/../shogi.js');const S=globalThis.Shogi;let ok=0,ng=0;
 const t=(n,c)=>{c?ok++:ng++;console.log((c?'PASS ':'FAIL ')+n)};
 let p=S.initial();t('初期局面の合法手30',S.legal(p).length===30);
 const kif=`手合割：平手

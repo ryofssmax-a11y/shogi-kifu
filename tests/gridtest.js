@@ -1,6 +1,6 @@
-const puppeteer=require('puppeteer-core'),fs=require('fs');const SS='/workspace/shogi-kifu-app/screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-(async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new',protocolTimeout:0});const pg=await br.newPage();await pg.setViewport({width:390,height:844,deviceScaleFactor:2});
-const errs=[];pg.on('pageerror',e=>errs.push(e.message));await pg.goto('http://localhost:8765/index.html');await pg.addScriptTag({path:'synth2.js'});if(process.env.EXPECT)await pg.evaluate(()=>window.EXPECT=1);if(process.env.ONLY)await pg.evaluate(o=>window.ONLY=o,process.env.ONLY);await sleep(500);
+const puppeteer=require('puppeteer-core'),fs=require('fs');const SS=__dirname+'/../screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+(async()=>{const br=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new',protocolTimeout:0});const pg=await br.newPage();await pg.setViewport({width:390,height:844,deviceScaleFactor:2});
+const errs=[];pg.on('pageerror',e=>errs.push(e.message));await pg.goto('http://localhost:8765/index.html');await pg.addScriptTag({path:__dirname+'/synth2.js'});if(process.env.EXPECT)await pg.evaluate(()=>window.EXPECT=1);if(process.env.ONLY)await pg.evaluate(o=>window.ONLY=o,process.env.ONLY);await sleep(500);
 const R=await pg.evaluate(async()=>{const S=Shogi;let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647,U=(a,b)=>a+(b-a)*rnd();
  const posList=[];let p=S.initial();posList.push(p);for(let i=0;i<30;i++){const l=S.legal(p);p=S.apply(p,l[Math.floor(rnd()*l.length)]);if(i%6==5)posList.push(p);}
  const cats={'標準':()=>({}),'傾き(斜めから)':()=>({tilt:U(.12,.28)}),'回転±25°':()=>({rot:U(-25,25)}),'小さく写る':()=>({size:U(.45,.6)}),'大きく写る':()=>({size:U(.85,.92)}),

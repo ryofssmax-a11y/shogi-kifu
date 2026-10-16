@@ -1,8 +1,8 @@
-const puppeteer=require('puppeteer-core'),fs=require('fs');const SS='/workspace/shogi-kifu-app/screenshots/';
-(async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new'});
+const puppeteer=require('puppeteer-core'),fs=require('fs');const SS=__dirname+'/../screenshots/';
+(async()=>{const br=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new'});
 const pg=await br.newPage();await pg.setViewport({width:390,height:844,deviceScaleFactor:2});
 const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
-await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>{localStorage.clear()});await pg.reload();await pg.addScriptTag({path:'synth.js'});
+await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>{localStorage.clear()});await pg.reload();await pg.addScriptTag({path:__dirname+'/synth.js'});
 await new Promise(r=>setTimeout(r,800));await pg.screenshot({path:SS+'01_start.png'});
 const tap=async(f,r)=>{await pg.click(`.cell[data-r="${r-1}"][data-c="${9-f}"]`);await new Promise(r=>setTimeout(r,60));};
 // 手入力: ▲76歩 △34歩 ▲22角成 △同銀 ▲45角打

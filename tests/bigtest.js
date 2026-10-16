@@ -1,6 +1,6 @@
-const puppeteer=require('puppeteer-core');const SS='/workspace/shogi-kifu-app/screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const puppeteer=require('puppeteer-core');const SS=__dirname+'/../screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const URL=process.env.URL||'http://localhost:8765/index.html';
-(async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new',protocolTimeout:0});const R={};const errs=[];
+(async()=>{const br=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new',protocolTimeout:0});const R={};const errs=[];
 const KIF='1 ７六歩(77)\n2 ３四歩(33)\n3 ２二角成(88)\n4 同　銀(31)\n5 ４五角打\n6 ５二金(41)\n7 ３四角(45)\n8 ６二銀(71)\n9 ２三角成(34)';
 for(const[w,h]of[[375,667],[390,844]]){const pg=await br.newPage();await pg.setViewport({width:w,height:h,deviceScaleFactor:2});pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
  await pg.goto(URL);await pg.evaluate(()=>localStorage.clear());await sleep(1000);await pg.reload();await sleep(800);

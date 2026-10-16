@@ -1,6 +1,6 @@
-const puppeteer=require('puppeteer-core');const SS='/workspace/shogi-kifu-app/screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const puppeteer=require('puppeteer-core');const SS=__dirname+'/../screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const URL=process.env.URL||'http://localhost:8765/index.html';
-(async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required'],headless:'new',protocolTimeout:0});const R={};const errs=[];
+(async()=>{const br=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required'],headless:'new',protocolTimeout:0});const R={};const errs=[];
 const open=async(w,h)=>{const pg=await br.newPage();await pg.setViewport({width:w,height:h,deviceScaleFactor:2});pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
  await pg.goto(URL);await pg.evaluate(()=>localStorage.clear());await sleep(1200);await pg.reload();await sleep(800);await pg.evaluate(async()=>{if(!(await evalCached()))await downloadEval(()=>{});});return pg;};
 const play=(pg,list)=>pg.evaluate(async list=>{for(const t of list){const p=pos();const m=Shogi.legal(p).find(x=>Shogi.notation(p,x).replace(/^[▲△]/,'')===t);if(!m)return 'no '+t;await commit(m);}return game.moves.length;},list);

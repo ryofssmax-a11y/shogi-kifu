@@ -1,9 +1,9 @@
-const puppeteer=require('puppeteer-core'),fs=require('fs');const SS='/workspace/shogi-kifu-app/screenshots/';
+const puppeteer=require('puppeteer-core'),fs=require('fs');const SS=__dirname+'/../screenshots/';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-(async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required'],headless:'new'});
+(async()=>{const br=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required'],headless:'new'});
 const pg=await br.newPage();await pg.setViewport({width:390,height:844,deviceScaleFactor:2});
 const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
-await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>localStorage.clear());await pg.reload();await pg.addScriptTag({path:'synth.js'});
+await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>localStorage.clear());await pg.reload();await pg.addScriptTag({path:__dirname+'/synth.js'});
 // 偽カメラ: canvas.captureStream を getUserMedia の代わりに返す
 await pg.evaluate(()=>{const C=[[150,220],[760,190],[840,1050],[70,1080]];window.SC=C;
  const out=document.createElement('canvas');out.width=900;out.height=1200;window.OUT=out;const ox=out.getContext('2d');

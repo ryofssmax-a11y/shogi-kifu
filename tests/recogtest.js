@@ -1,7 +1,7 @@
-const puppeteer=require('puppeteer-core'),fs=require('fs');const SS='/workspace/shogi-kifu-app/screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-(async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new'});
+const puppeteer=require('puppeteer-core'),fs=require('fs');const SS=__dirname+'/../screenshots/';const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+(async()=>{const br=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new'});
 const pg=await br.newPage();await pg.setViewport({width:390,height:844,deviceScaleFactor:2});const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>{console.log('dialog',d.message());d.accept()});
-await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>localStorage.clear());await pg.reload();await pg.addScriptTag({path:'synth.js'});await sleep(500);
+await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>localStorage.clear());await pg.reload();await pg.addScriptTag({path:__dirname+'/synth.js'});await sleep(500);
 // A: ブラウザで描いた盤（学習に使っていない描画）での認識精度
 const A=await pg.evaluate(async()=>{const S=Shogi,C=[[150,220],[760,190],[840,1050],[70,1080]];let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
  const posList=[];for(let g=0;g<8;g++){let p=S.initial();const n=10+g*12;for(let i=0;i<n;i++){const l=S.legal(p);if(!l.length)break;const caps=l.filter(m=>m.cap||m.promote);const pool=caps.length&&rnd()<.6?caps:l;const m=pool[Math.floor(rnd()*pool.length)];p=S.apply(p,m);}posList.push(p);}
