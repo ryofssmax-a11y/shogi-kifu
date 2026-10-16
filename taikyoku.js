@@ -163,7 +163,7 @@ async function openPlay(){const o={mode:'ai',side:'sente',h:'平手',level:3,thi
   <label class="chk"><input type="checkbox" id="poHint"${o.hints?' checked':''}> AIのヒントを使えるようにする（AIエンジンが必要）</label></div>
  <label>手合割</label>${sel('poH',S.HANDICAPS.map(h=>[h,h]),o.h)}
  <label>対局時計</label><div class="row">${sel('poMain',[[0,'持ち時間なし'],[1,'1分'],[5,'5分'],[10,'10分'],[30,'30分']],o.main)}${sel('poByo',[[0,'秒読みなし'],[10,'秒読み10秒'],[30,'秒読み30秒'],[60,'秒読み60秒']],o.byo)}</div>
- <label class="chk"><input type="checkbox" id="poCam"${o.camera?' checked':''}> 実際の盤で指す（カメラの自動記録で手を検出して記録）</label>
+ <label class="chk"><input type="checkbox" id="poCam"${o.camera?' checked':''}> 📷 カメラモード（オプション）：実際の盤で指し、カメラで手を検出して記録</label>
  <button class="pri" id="poGo" style="width:100%;min-height:56px">対局開始</button>
  <p class="hint" id="poNote"></p>`);
  let mode=o.mode,lv=o.level;

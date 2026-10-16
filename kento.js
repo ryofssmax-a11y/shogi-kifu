@@ -62,7 +62,7 @@ async function paint(){const el=$('#kento');if(!KT.open)return;
  const lines=Object.keys(KT.info).sort((a,b)=>a-b).slice(0,KT.multipv).map(k=>{const inf=KT.info[k],s=senteVal(inf,p.turn);const ja=pvToJa(p,inf.pv,game.moves[view-1],8);
   return`<div class="pvl"><b>${k}</b><span class="pvs">${s.mate!=null?(s.mate>0?'+詰':'−詰'):(s.cp>0?'+':'')+s.cp}</span><span class="pvm">${ja.join(' ')}</span></div>`;}).join('');
  el.innerHTML=`<div class="ktop"><b id="ktEval">${sv?evalLabel(sv.cp,sv.mate):(KT.searching?'考え中…':'—')}</b><span class="ktst">${i1?`深さ${i1.depth}・${(i1.nodes/1e4).toFixed(0)}万局面・${(i1.nps/1e3).toFixed(0)}k/秒`:''}</span></div>
- <div class="wr"><i style="width:${(wr*100).toFixed(1)}%"></i><span class="l">▲${(wr*100).toFixed(0)}%</span><span class="r">△${(100-wr*100).toFixed(0)}%</span></div>
+ <div class="wr"><i style="width:${(wr*100).toFixed(1)}%"></i><span class="l">▲先手 ${(wr*100).toFixed(0)}%</span><span class="r">${(100-wr*100).toFixed(0)}% 後手△</span></div>
  <div id="ktLines">${lines||'<p class="hint">'+(S.legal(p).length?'':'詰みの局面です')+'</p>'}</div>
  <div class="row"><button id="ktGo" class="${KT.on?'':'pri'}">${KT.on?'■ 停止':'▶ 検討'}</button>
  <select id="ktTime">${[[0,'時間: 無制限'],[1000,'1秒'],[3000,'3秒'],[10000,'10秒']].map(([v,t])=>`<option value="${v}"${v===KT.time?' selected':''}>${t}</option>`).join('')}</select>
@@ -94,7 +94,7 @@ function drawGraph(){const el=$('#ktGraph');const a=game.analysis;if(!el||!a)ret
  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" class="graph"><rect x="0" y="0" width="${W}" height="${H/2}" fill="rgba(255,138,61,.08)"/><line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="#999" stroke-dasharray="3 3"/>
  <line x1="${X(view)}" x2="${X(view)}" y1="0" y2="${H}" stroke="var(--sel)" stroke-width="2"/><polyline points="${pts}" fill="none" stroke="var(--acc)" stroke-width="2"/>
  ${a.evals.map((v,i)=>mk[i]?`<circle cx="${X(i)}" cy="${Y(v)}" r="5" fill="${mk[i]==='悪手'?'#e53935':'#fb8c00'}" data-i="${i}"/>`:'').join('')}
- <text x="4" y="12" font-size="10" fill="var(--sub)">先手有利</text><text x="4" y="${H-4}" font-size="10" fill="var(--sub)">後手有利</text></svg>
+ <text x="4" y="12" font-size="10" fill="var(--sub)">▲先手有利</text><text x="4" y="${H-4}" font-size="10" fill="var(--sub)">△後手有利</text></svg>
  <p class="hint">グラフをタップするとその手に移動します。${Object.keys(mk).length?`悪手 ${Object.values(mk).filter(x=>x==='悪手').length}・疑問手 ${Object.values(mk).filter(x=>x==='疑問手').length}`:''}（${a.engine}・1手${a.per}秒）</p>`;
  el.querySelector('svg').onclick=e=>{const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width;go(Math.round((x-8)/((W-16)/Math.max(1,game.moves.length))));};}
 document.addEventListener('click',e=>{if(e.target.id==='ktAll'&&KT.job){KT.job=null;stopSearch();e.stopImmediatePropagation();e.preventDefault();}},true);
