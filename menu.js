@@ -20,9 +20,10 @@ document.body.insertAdjacentHTML('beforeend',`<div id="menu" class="menu"><div c
  <div class="mlinks"><button id="mGames">📂 保存した棋譜</button><button id="mKento">🧠 AIで検討</button><button id="mSet">⚙ 設定</button></div></div></div>`);
 $('header').insertAdjacentHTML('afterbegin','<button id="bHome" class="ic" aria-label="メニュー">🏠</button>');
 const hide=()=>{$('#menu').classList.remove('on');document.body.classList.remove('menuon');};
-function show(){closeSheet();const c=$('#mCont'),live=PLAY.on&&!PLAY.result,n=game?game.moves.length:0;
- c.innerHTML=live||n?`<button class="mcard mcont" id="mGoOn"><span class="mi">▶</span><span class="mt"><b>${live?'対局に戻る':'続きから'}</b><small>${game.name}・${n}手</small></span><span class="mgo">›</span></button>`:'';
- if($('#mGoOn'))$('#mGoOn').onclick=hide;$('#menu').classList.add('on');document.body.classList.add('menuon');}
+function show(){closeSheet();const c=$('#mCont'),live=PLAY.on&&!PLAY.result,n=game?game.moves.length:0,pz=!live&&game&&game.pause&&window.resumePlay;
+ const card=(t,sub)=>`<button class="mcard mcont" id="mGoOn"><span class="mi">▶</span><span class="mt"><b>${t}</b><small>${sub}</small></span><span class="mgo">›</span></button>`;
+ c.innerHTML=live?card('対局に戻る',`${game.name}・${n}手`):pz?card('対局を再開',`${pauseDesc(game)}（${game.name}）`):n?card('続きから',`${game.name}・${n}手`):'';
+ if($('#mGoOn'))$('#mGoOn').onclick=pz?()=>resumePlay(game.id):hide;$('#menu').classList.add('on');document.body.classList.add('menuon');}
 const back=()=>{const b=$('#suMenu');if(b)b.onclick=show;};
 $('#bHome').onclick=show;
 $('#mAI').onclick=()=>{hide();openSetup('ai');};$('#mHU').onclick=()=>{hide();openSetup('human');};$('#mRec').onclick=()=>{hide();openRecord();};
@@ -85,11 +86,11 @@ function openRecord(){const has=!!(game&&game.moves.length&&!game.vsAI&&!game.vs
  $('#rAuto').onclick=()=>{prep();openAuto();};
  $('#rShot').onclick=()=>{prep();closeSheet();openCam();};
  $('#rTap').onclick=()=>{prep();closeSheet();toast('駒をタップして、動かす先をタップすると記録されます');};}
-window.showMenu=show;window.openSetup=openSetup;window.openRecord=openRecord;
+window.showMenu=show;window.hideMenu=hide;window.openSetup=openSetup;window.openRecord=openRecord;
 // ---------- 対局中の画面：カメラを使わない対局では、記録用の下ボタン（自動記録・撮影・戻る）を隠す ----------
 const _pb=paintBar;paintBar=function(){document.body.classList.toggle('pnc',!!(PLAY.on&&!PLAY.result&&PLAY.opt&&!PLAY.opt.camera));_pb();};
 // 終局画面からメニューへ
 const _fin=finish;finish=function(r){const was=PLAY.result;_fin(r);const c=$('#peClose');if(!was&&c&&!$('#peMenu')){c.insertAdjacentHTML('beforebegin','<button id="peMenu">🏠 メニュー</button>');$('#peMenu').onclick=show;}};
 // ---------- 起動 ----------
-if(st.menuNext){const m=st.menuNext;delete st.menuNext;save();openSetup(m);}else show();
+if(st.menuNext){const m=st.menuNext;delete st.menuNext;save();openSetup(m);}else setTimeout(show,0);
 })();

@@ -28,6 +28,7 @@ python -m http.server 8765
 | `kento.js` | AI 検討（やねうら王 WASM＋つようら王11mini）。評価関数は同意後に別キャッシュ `sk-eval-tuyo11mini-20261003` へ保存 |
 | `taikyoku.js` | ⚔️対局モード（AI 10段階／人対人・時計・待った・投了・入玉宣言・千日手）。強さの設計は `PLAY.md` |
 | `menu.js` | 起動時メニューと各モードの準備画面。メニュー（続きから／やねうら王と対局／ふたりで対局／実際の盤を記録／保存した棋譜・検討・設定）→ 対局の準備画面 `openSetup(mode)`（AIの初回準備＝読み込み直し・ダウンロードもここで。`st.menuNext` で読み込み直し後に戻る）／記録の案内画面 `openRecord()`。`openPlay` をこの準備画面に置き換えている（taikyoku.js の旧設定シートは未使用）。カメラを使わない対局中は `body.pnc` で下の記録ボタンを隠す。終局画面に🏠メニュー。ヘッダーの🏠で再表示。最後に読み込む |
+| `pause.js` | 対局の中断・保存と再開。対局中は `paintBar` のたび（1手ごと）に `game.pause`（設定・持ち時間の残り・ヒント回数）を保存、ヘッダーの💾で保存/中断、`resumePlay(id)` で再開（メニューの「対局を再開」・📂一覧から）。終局で `game.pause` を消す。menu.js の後に読み込む |
 | `evalbar.js` | AI 表示設定（すべて/非表示/評価値バーのみ）、評価値バー（横向き・左▲先手/右△後手で固定、盤の反転に影響されない）、対局中の📊表示切替（`st.evShow`）、大駒強調 |
 | `sw.js` | Service Worker：オフラインキャッシュ＋COOP/COEP ヘッダー付与（GitHub Pages で SharedArrayBuffer を使うため。WASM エンジンのスレッドに必須） |
 | `engine/` | やねうら王 WASM ビルド一式と評価関数。作り方は `engine/BUILD.md`（GPLv3） |
@@ -41,7 +42,7 @@ python -m http.server 8765
 1. **公開するときは `sw.js` の `V='sk-vNN'` を1つ上げる。** 上げないと利用者の端末に古いファイルが残る。コミットメッセージ末尾に `SW sk-vNN` と書く慣習。
    新しい JS/CSS を足したら `sw.js` の `F=[...]` と `index.html` の `<script>` の両方に追加する。
 2. **後から読み込む JS が前の関数を上書きして機能を足す方式。** 例: `const _render=render; render=function(){_render(); ...}`。
-   既存の上書きチェーン: `render`（app → kento → taikyoku → evalbar）、`paintBar`（taikyoku → evalbar → menu）、`finish`（taikyoku → menu）、`stopCam`、`commit`、`legalNow`、`load`、`showGames`、`storePhoto`、`marks`、`paint`、`openPlay`、`openAIView`。
+   既存の上書きチェーン: `render`（app → kento → taikyoku → evalbar）、`paintBar`（taikyoku → evalbar → menu → pause）、`finish`（taikyoku → menu）、`stopCam`、`commit`、`legalNow`、`load`、`showGames`（app → recog-ui → pause）、`storePhoto`、`marks`、`paint`、`openPlay`、`openAIView`。
    読み込み順を変えると壊れるので、新機能は新しいファイルにして最後に読み込むのが安全。
 3. グローバル共有の変数: `st`（保存される状態）・`game`・`ps`・`view`・`S`(=Shogi)・`$`。状態を変えたら `save()`。
 4. **`endai/` `tsume/` `narikoma/` は初代 iPad mini（iOS 9）で動くことが条件。** JS は ES5 のみ（`var`、アロー関数・`let/const`・テンプレート文字列・`class` は不可）、CSS は Grid・`gap`・CSS変数・`aspect-ratio` 不可（各ファイル冒頭のコメント参照）。本体アプリにはこの制限はない。
@@ -64,7 +65,7 @@ python -m http.server 8765
 
 ## これまでの経緯
 
-2026-10-15〜16 に作成（`git log` 参照）。試作版 → 自動記録 → 駒認識 CNN → AI検討 → おまけ3アプリ → 盤の自動検出 → 対局モード → AI表示設定 → 大駒強調（sk-v12）→ 起動時メニュー・「戻る」ボタン（sk-v13）→ 評価値バーを横・左▲先手/右△後手に統一、対局中📊で表示切替（sk-v14）→ メニューからの流れを再設計（準備画面・記録の案内・対局中の下ボタン整理、sk-v15）の順。
+2026-10-15〜16 に作成（`git log` 参照）。試作版 → 自動記録 → 駒認識 CNN → AI検討 → おまけ3アプリ → 盤の自動検出 → 対局モード → AI表示設定 → 大駒強調（sk-v12）→ 起動時メニュー・「戻る」ボタン（sk-v13）→ 評価値バーを横・左▲先手/右△後手に統一、対局中📊で表示切替（sk-v14）→ メニューからの流れを再設計（準備画面・記録の案内・対局中の下ボタン整理、sk-v15）→ 対局の途中保存・中断・再開（sk-v16）の順。
 テストは元々 Linux 環境（`/workspace/shogi-kifu-app`）で書かれていたため、パスを相対化して Windows でも動くようにした。
 
 ## 次にやれそうなこと（未着手）
