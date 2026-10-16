@@ -27,6 +27,7 @@ python -m http.server 8765
 | `recog.js` / `recog-ui.js` | 駒認識 CNN（int8・約150KB、自前の JS 推論）と、その画面（局面読み取り・再同期・学習データ zip 書き出し） |
 | `kento.js` | AI 検討（やねうら王 WASM＋つようら王11mini）。評価関数は同意後に別キャッシュ `sk-eval-tuyo11mini-20261003` へ保存 |
 | `taikyoku.js` | ⚔️対局モード（AI 10段階／人対人・時計・待った・投了・入玉宣言・千日手）。強さの設計は `PLAY.md` |
+| `menu.js` | 起動時のモード選択メニュー（やねうら王と対局／棋譜をカメラで記録）。ヘッダーの🏠で再表示。最後に読み込む |
 | `evalbar.js` | AI 表示設定（すべて/非表示/評価値バーのみ）、評価値バー、大駒強調 |
 | `sw.js` | Service Worker：オフラインキャッシュ＋COOP/COEP ヘッダー付与（GitHub Pages で SharedArrayBuffer を使うため。WASM エンジンのスレッドに必須） |
 | `engine/` | やねうら王 WASM ビルド一式と評価関数。作り方は `engine/BUILD.md`（GPLv3） |
@@ -63,7 +64,7 @@ python -m http.server 8765
 
 ## これまでの経緯
 
-2026-10-15〜16 に作成（`git log` 参照）。試作版 → 自動記録 → 駒認識 CNN → AI検討 → おまけ3アプリ → 盤の自動検出 → 対局モード → AI表示設定 → 大駒強調（sk-v12）の順。
+2026-10-15〜16 に作成（`git log` 参照）。試作版 → 自動記録 → 駒認識 CNN → AI検討 → おまけ3アプリ → 盤の自動検出 → 対局モード → AI表示設定 → 大駒強調（sk-v12）→ 起動時メニュー・「戻る」ボタン（sk-v13）の順。
 テストは元々 Linux 環境（`/workspace/shogi-kifu-app`）で書かれていたため、パスを相対化して Windows でも動くようにした。
 
 ## 次にやれそうなこと（未着手）

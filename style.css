@@ -59,7 +59,7 @@ select,input[type=text]{font:inherit;min-height:44px;width:100%;background:var(-
 @keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-22px) scale(.95,1.08)}80%{transform:translateY(0) scale(1.1,.88)}100%{transform:none}}
 .eyes{animation:blink 4s infinite;transform-origin:40px 42px}@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
 .hidden{display:none!important}
-footer #bUndo{flex:.6}
+footer #bUndo{flex:.8}footer button{padding:0 6px;white-space:nowrap}
 .ov{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 .abadge{position:absolute;left:8px;top:8px;padding:6px 12px;border-radius:16px;font-weight:700;font-size:15px;color:#fff;background:#2e7d32}
 .abadge.motion{background:#ef6c00}.abadge.wait{background:#f9a825;color:#222}.abadge.rec{background:#1e88e5}.abadge.ask{background:#d32f2f}.abadge.init{background:#555}
@@ -136,3 +136,13 @@ body.playing .boardwrap,body.playing .hand,body.playing .playtop,body.playing #e
 .bigp .cell.big span{font-size:calc(1em * var(--bps,1.1));font-weight:900;line-height:1;-webkit-text-stroke:.4px currentColor}
 .bigk .cell.kg span{font-size:calc(1em * (1 + (var(--bps,1.1) - 1) * .6));font-weight:900;line-height:1}
 .bigp .hand .hp.big span{font-size:calc(1em * var(--bps,1.1));font-weight:900;-webkit-text-stroke:.4px currentColor}
+
+/* 起動時メニュー（menu.js） */
+.menu{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}.menu.on{display:flex}
+body.menuon{overflow:hidden}body.menuon .chara{display:none}
+.mbox{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
+.mhd{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:10px}.mhd img{width:64px;height:64px}.mhd b{font-size:24px}.mhd small{color:var(--sub);font-size:14px}
+.mcard{display:flex;align-items:center;gap:14px;text-align:left;padding:18px 16px;min-height:96px;border-radius:16px;border:2px solid var(--bd)}
+.mcard .mi{font-size:36px;line-height:1}.mcard .mt{display:flex;flex-direction:column;gap:4px}.mcard b{font-size:19px}.mcard small{color:var(--sub);font-size:13px;line-height:1.4}
+#mPlay{border-color:var(--acc)}
+.mback{background:none;border:none;color:var(--sub);text-decoration:underline;font-size:14px;margin-top:4px}
